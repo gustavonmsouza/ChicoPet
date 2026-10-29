@@ -112,6 +112,15 @@ function runSmokeTest() {
   });
   win.webContents.once('did-finish-load', async () => {
     try {
+      await win.webContents.executeJavaScript(`new Promise((resolve, reject) => {
+        const deadline = Date.now() + 5000;
+        const check = () => {
+          if (document.documentElement.dataset.rendererReady === 'true') return resolve();
+          if (Date.now() >= deadline) return reject(new Error('Renderer module did not initialize'));
+          setTimeout(check, 20);
+        };
+        check();
+      })`);
       const initialState = await win.webContents.executeJavaScript(`new Promise((resolve, reject) => {
         const image = document.getElementById('chico');
         const timeout = setTimeout(() => reject(new Error('Mascot sprite did not load')), 5000);
@@ -142,7 +151,16 @@ function runSmokeTest() {
         throw new Error(`Interaction did not select the happy sprite: ${currentSprite}`);
       }
 
-      console.log(`Electron smoke test passed (${initialState.width}x${initialState.height} sprite, IPC interaction).`);
+      win.webContents.send(channels.SET_POSE, 'walk');
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const walkingSprite = await win.webContents.executeJavaScript(
+        'document.getElementById("chico").src',
+      );
+      if (!walkingSprite.includes('/caminhada-direita-')) {
+        throw new Error(`Walking pose did not select a walking sprite: ${walkingSprite}`);
+      }
+
+      console.log(`Electron smoke test passed (${initialState.width}x${initialState.height} sprite, walking frames and IPC interaction).`);
       app.exit(0);
     } catch (error) {
       fail(error);

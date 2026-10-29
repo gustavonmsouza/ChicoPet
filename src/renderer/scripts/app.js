@@ -145,6 +145,7 @@ window.chicoApi.onAutonomousState(({ state, direction }) => {
 });
 
 playState(character.state);
+document.documentElement.dataset.rendererReady = 'true';
 document.addEventListener('visibilitychange', () => animationPlayer.setPaused(document.hidden));
 window.addEventListener('pagehide', () => {
   animationPlayer.stop();
