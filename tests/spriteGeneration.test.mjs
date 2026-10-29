@@ -34,7 +34,7 @@ test('sprite generator reproduces the checked-in assets and manifest', (t) => {
 test('grounded sprite frames share a consistent bottom alignment', () => {
   const root = resolve('assets/sprites/normalized');
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
-  assert.equal(manifest.frames.filter(({ name }) => name.startsWith('caminhada-')).length, 8);
+  assert.equal(manifest.frames.filter(({ name }) => name.startsWith('caminhada-')).length, 16);
   assert.equal(manifest.frames.filter(({ name }) => name.startsWith('corrida-')).length, 10);
   const grounded = manifest.frames.filter(({ anchor }) => anchor === 'ground');
   const groundRows = grounded.map(({ file }) => {

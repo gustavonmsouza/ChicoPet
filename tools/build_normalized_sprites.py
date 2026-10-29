@@ -21,6 +21,7 @@ CANVAS_WIDTH = 640
 CANVAS_HEIGHT = 512
 GROUND_Y = 512
 PALETTE_SIZE = 192
+SOURCE_FILES = {"chico_andando": "chico-andando.png"}
 
 # Bounds are deliberately stored separately from segmentation.  That makes a
 # cleanup threshold unable to change which source pose receives a filename.
@@ -56,11 +57,29 @@ POSE_BOUNDS = {
         15: (1120, 791, 1309, 1008),
         18: (594, 832, 836, 1005),
     },
+    "chico_andando": {
+        1: (26, 146, 247, 333),
+        2: (275, 151, 495, 333),
+        3: (512, 141, 743, 333),
+        4: (759, 148, 991, 333),
+        5: (1008, 141, 1239, 331),
+        6: (1239, 146, 1484, 333),
+        7: (1487, 149, 1728, 333),
+        8: (1735, 146, 1972, 333),
+        9: (14, 524, 247, 721),
+        10: (275, 529, 495, 721),
+        11: (521, 524, 743, 721),
+        12: (760, 524, 991, 720),
+        13: (996, 529, 1239, 721),
+        14: (1239, 524, 1473, 721),
+        15: (1487, 526, 1729, 721),
+        16: (1735, 526, 1967, 721),
+    },
 }
 
 
 def source_mode(name):
-    return {"chico1": "alpha", "chico2": "checker", "chico3": "white"}[name]
+    return {"chico1": "alpha", "chico2": "checker", "chico3": "white", "chico_andando": "white"}[name]
 
 
 def build_specs():
@@ -75,18 +94,20 @@ def build_specs():
         {"name": "dormindo", "source": "chico3", "pose": 18, "anchor": "ground", "fit": "width", "size": 440},
     ]
 
-    # The four standing poses form the walking cycle. Pose 11 faces right in
-    # the source sheet, so account for its origin when writing both directions.
-    movement_poses = {
-        "caminhada": ((7, False), (10, False), (8, False), (9, False)),
-        "corrida": ((12, False), (14, False), (13, False), (11, True), (7, False)),
-    }
-    for state, poses in movement_poses.items():
-        for direction in ("esquerda", "direita"):
+    corrida_poses = ((12, False), (14, False), (13, False), (11, True), (7, False))
+    movement_poses = (
+        ("caminhada", "chico_andando", {
+            "esquerda": tuple((pose, False) for pose in range(9, 17)),
+            "direita": tuple((pose, True) for pose in range(1, 9)),
+        }),
+        ("corrida", "chico2", {"esquerda": corrida_poses, "direita": corrida_poses}),
+    )
+    for state, source, poses_by_direction in movement_poses:
+        for direction, poses in poses_by_direction.items():
             for index, (pose, faces_right) in enumerate(poses, 1):
                 specs.append({
                     "name": f"{state}-{direction}-{index:02d}",
-                    "source": "chico2", "pose": pose, "anchor": "ground",
+                    "source": source, "pose": pose, "anchor": "ground",
                     "fit": "height", "size": 410,
                     "mirror": (direction == "direita") != faces_right,
                 })
@@ -373,7 +394,8 @@ def main():
 
     source_images = {}
     for source in POSE_BOUNDS:
-        source_images[source] = read_rgba(root / "assets" / "sprites" / f"{source}.png")
+        filename = SOURCE_FILES.get(source, f"{source}.png")
+        source_images[source] = read_rgba(root / "assets" / "sprites" / filename)
 
     frames = {}
     specs = build_specs()

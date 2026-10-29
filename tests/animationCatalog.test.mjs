@@ -32,29 +32,45 @@ test('movement and fall animations select real left/right frame files', () => {
 });
 
 test('walking and running use several aligned poses', () => {
-  assert.equal(selectAnimation('WALKING', 1).frames.length, 4);
+  assert.equal(selectAnimation('WALKING', 1).frames.length, 8);
   assert.equal(selectAnimation('RUNNING', 1).frames.length, 5);
 });
 
-test('walking frames visibly move the paws', () => {
+test('walking uses all eight original poses for each direction', () => {
+  const manifestPath = join(process.cwd(), 'assets', 'sprites', 'normalized', 'manifest.json');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const leftFrames = manifest.frames.filter(({ name }) => name.startsWith('caminhada-esquerda-'));
+  const rightFrames = manifest.frames.filter(({ name }) => name.startsWith('caminhada-direita-'));
+  assert.deepEqual(leftFrames.map(({ pose }) => pose), [9, 10, 11, 12, 13, 14, 15, 16]);
+  assert.deepEqual(rightFrames.map(({ pose }) => pose), [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.ok([...leftFrames, ...rightFrames].every(({ source }) => source === 'chico_andando'));
+  assert.ok([...leftFrames, ...rightFrames].every(({ source }) => source !== 'chico2'));
+});
+
+test('walking frames visibly alternate front and hind paws', () => {
   const frames = selectAnimation('WALKING', 1).frames;
-  const pawRegion = (frameUrl) => {
-    const { width, height, scanlines } = pngInfo(frameUrl);
-    const pixels = [];
-    for (let y = Math.floor(height * 0.82); y < height; y += 1) {
-      const row = y * (width * 4 + 1) + 1;
-      pixels.push(...scanlines.subarray(row, row + width * 4));
-    }
-    return pixels;
-  };
-  const first = pawRegion(frames[0]);
-  for (const frame of frames.slice(1)) {
-    const next = pawRegion(frame);
+  const changedPawPixels = (firstUrl, secondUrl, left, right) => {
+    const first = pngInfo(firstUrl);
+    const second = pngInfo(secondUrl);
     let changed = 0;
-    for (let index = 0; index < first.length; index += 4) {
-      if (first[index + 3] !== next[index + 3]) changed += 1;
+    for (let y = 385; y < 505; y += 1) {
+      const firstRow = y * (first.width * 4 + 1) + 1;
+      const secondRow = y * (second.width * 4 + 1) + 1;
+      for (let x = left; x < right; x += 1) {
+        const firstAlpha = first.scanlines[firstRow + x * 4 + 3];
+        const secondAlpha = second.scanlines[secondRow + x * 4 + 3];
+        if (firstAlpha !== secondAlpha) changed += 1;
+      }
     }
-    assert.ok(changed > 100, `${frame} should visibly change paw silhouettes`);
+    return changed;
+  };
+
+  for (let index = 0; index < frames.length; index += 1) {
+    const next = (index + 1) % frames.length;
+    assert.ok(changedPawPixels(frames[index], frames[next], 55, 295) > 100,
+      `${frames[index]} -> ${frames[next]} should move the hind paws`);
+    assert.ok(changedPawPixels(frames[index], frames[next], 295, 590) > 100,
+      `${frames[index]} -> ${frames[next]} should move the front paws`);
   }
 });
 

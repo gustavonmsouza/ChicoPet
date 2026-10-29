@@ -40,8 +40,9 @@ Os caminhos e módulos de código seguem os nomes convencionais em inglês; os a
 português, como `caminhada-direita-01.png` e `queda-esquerda-01.png`.
 
 ## Como substituir os sprites
-As folhas-fonte ficam em `assets/sprites/chico1.png`, `chico2.png` e `chico3.png`. Para reconstruir os
-arquivos de runtime, execute:
+As folhas-fonte ficam em `assets/sprites/chico1.png`, `chico2.png`, `chico3.png` e
+`assets/sprites/chico-andando.png`. Esta última contém oito poses de caminhada para cada direção. Para reconstruir
+os arquivos de runtime, execute:
 
 ```bash
 python3 tools/build_normalized_sprites.py
@@ -55,8 +56,8 @@ reexecutado sempre que seus parâmetros ou as folhas-fonte mudarem.
 
 ## Testes e distribuição
 `npm test` executa os testes de lógica, persistência de preferências, alinhamento visual dos quadros e
-reprodutibilidade do gerador. `npm run test:smoke` é um teste rápido de inicialização e IPC que só pode ser
-executado no macOS; ele usa um diretório temporário e não altera as preferências reais.
+reprodutibilidade do gerador. `npm run test:smoke` valida no macOS a inicialização, os oito quadros de caminhada
+em cada direção e a interação IPC; usa um diretório temporário e não altera as preferências reais.
 
 O GitHub Actions roda a suíte em Linux e macOS. Para gerar os pacotes localmente, use `npm run dist:mac`.
 Ao enviar uma tag `v*`, o workflow de release cria artefatos DMG e ZIP para Apple Silicon e Intel e publica
@@ -90,8 +91,8 @@ As poses utilizadas pelo app são geradas em `assets/sprites/normalized/`. Cada 
 as patas e limpa a borda neutra deixada pelas folhas-fonte. Isso impede flashes de tamanho, manchas de fundo e trocas
 de tom quando uma animação avança.
 
-O catálogo usa quatro poses alternadas de caminhada, cinco de corrida, cinco de queda, aterrissagem, recuperação e poses de
-repouso. As sequências esquerda e direita são arquivos físicos distintos, gerados por espelhamento controlado da
+O catálogo usa oito poses de caminhada por direção, cinco de corrida, cinco de queda, aterrissagem, recuperação e poses de
+repouso. Caminhada e corrida usam velocidades diferentes. As sequências esquerda e direita são arquivos físicos distintos, gerados por espelhamento controlado da
 mesma pose fonte; o renderer não aplica uma inversão CSS global.
 
 Ainda não há interface de conversa nem ação de clique duplo implementada. A janela transparente não tem teste visual

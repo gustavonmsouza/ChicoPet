@@ -142,6 +142,43 @@ function runSmokeTest() {
       })`);
       if (!initialState.bridge) throw new Error('Preload API is unavailable');
 
+      win.webContents.send(channels.SET_POSE, 'walk');
+      const walkingFrames = await win.webContents.executeJavaScript(`new Promise((resolve) => {
+        const image = document.getElementById('chico');
+        const frames = new Set([image.src]);
+        const interval = setInterval(() => frames.add(image.src), 35);
+        setTimeout(() => {
+          clearInterval(interval);
+          resolve([...frames]);
+        }, 1200);
+      })`);
+      const distinctWalkingFrames = new Set(walkingFrames.filter((src) => src.includes('/caminhada-direita-')));
+      if (distinctWalkingFrames.size < 8) {
+        throw new Error(`Walking animation displayed ${distinctWalkingFrames.size} distinct poses`);
+      }
+
+      win.webContents.send(channels.AUTONOMOUS_STATE, { state: 'WALKING', direction: -1 });
+      const leftWalkingFrames = await win.webContents.executeJavaScript(`new Promise((resolve) => {
+        const image = document.getElementById('chico');
+        const frames = new Set();
+        const timeout = setTimeout(() => {
+          clearInterval(interval);
+          resolve([...frames]);
+        }, 3000);
+        const interval = setInterval(() => {
+          if (image.src.includes('/caminhada-esquerda-')) frames.add(image.src);
+          if (frames.size === 8) {
+            clearTimeout(timeout);
+            clearInterval(interval);
+            resolve([...frames]);
+          }
+        }, 25);
+      })`);
+      const distinctLeftWalkingFrames = new Set(leftWalkingFrames.filter((src) => src.includes('/caminhada-esquerda-')));
+      if (distinctLeftWalkingFrames.size < 8) {
+        throw new Error(`Left walking animation displayed ${distinctLeftWalkingFrames.size} poses: ${[...distinctLeftWalkingFrames].join(', ')}`);
+      }
+
       await win.webContents.executeJavaScript('window.chicoApi.interact()');
       await new Promise((resolve) => setTimeout(resolve, 500));
       const currentSprite = await win.webContents.executeJavaScript(
@@ -151,16 +188,7 @@ function runSmokeTest() {
         throw new Error(`Interaction did not select the happy sprite: ${currentSprite}`);
       }
 
-      win.webContents.send(channels.SET_POSE, 'walk');
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      const walkingSprite = await win.webContents.executeJavaScript(
-        'document.getElementById("chico").src',
-      );
-      if (!walkingSprite.includes('/caminhada-direita-')) {
-        throw new Error(`Walking pose did not select a walking sprite: ${walkingSprite}`);
-      }
-
-      console.log(`Electron smoke test passed (${initialState.width}x${initialState.height} sprite, walking frames and IPC interaction).`);
+      console.log(`Electron smoke test passed (${initialState.width}x${initialState.height} sprite, ${distinctWalkingFrames.size} right and ${distinctLeftWalkingFrames.size} left walking poses, IPC interaction).`);
       app.exit(0);
     } catch (error) {
       fail(error);
@@ -177,6 +205,9 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
     preferences = loadPreferences(preferencesPath);
+    if (process.env.CHICO_ELECTRON_SMOKE === '1') {
+      preferences = { ...preferences, autonomousMovement: false };
+    }
     if (process.platform === 'darwin' && process.env.CHICO_ELECTRON_SMOKE !== '1') {
       app.setLoginItemSettings({ openAtLogin: preferences.startAtLogin, openAsHidden: false });
     }

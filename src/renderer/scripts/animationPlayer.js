@@ -24,7 +24,7 @@ export class AnimationPlayer {
   schedule() {
     if (!this.animation || this.animation.frames.length < 2 || this.paused || this.timer !== null) return;
     const delay = 1000 / Math.max(1, this.animation.fps || 1);
-    this.timer = this.setTimeoutFn(() => {
+    this.timer = this.setTimeoutFn.call(globalThis, () => {
       this.timer = null;
       this.advance();
     }, delay);
@@ -50,7 +50,7 @@ export class AnimationPlayer {
   setPaused(paused) {
     this.paused = Boolean(paused);
     if (this.paused) {
-      if (this.timer !== null) this.clearTimeoutFn(this.timer);
+      if (this.timer !== null) this.clearTimeoutFn.call(globalThis, this.timer);
       this.timer = null;
     } else {
       this.schedule();
@@ -58,7 +58,7 @@ export class AnimationPlayer {
   }
 
   stop() {
-    if (this.timer !== null) this.clearTimeoutFn(this.timer);
+    if (this.timer !== null) this.clearTimeoutFn.call(globalThis, this.timer);
     this.timer = null;
     this.animation = null;
     this.frameIndex = 0;
