@@ -1,0 +1,570 @@
+{
+  "chico1": {
+    "source": "/Users/gustavonorberto/Library/Mobile Documents/com~apple~CloudDocs/Projetos/ChicoPet/assets/sprites/chico1.png",
+    "backgroundMode": "alpha",
+    "poses": [
+      {
+        "index": 1,
+        "file": "pose_01.png",
+        "bounds": [
+          152,
+          20,
+          519,
+          358
+        ],
+        "sourceArea": 79230
+      },
+      {
+        "index": 2,
+        "file": "pose_02.png",
+        "bounds": [
+          1025,
+          22,
+          1387,
+          358
+        ],
+        "sourceArea": 79394
+      },
+      {
+        "index": 3,
+        "file": "pose_03.png",
+        "bounds": [
+          585,
+          28,
+          952,
+          358
+        ],
+        "sourceArea": 78208
+      },
+      {
+        "index": 4,
+        "file": "pose_04.png",
+        "bounds": [
+          36,
+          386,
+          382,
+          671
+        ],
+        "sourceArea": 61494
+      },
+      {
+        "index": 5,
+        "file": "pose_05.png",
+        "bounds": [
+          418,
+          401,
+          751,
+          661
+        ],
+        "sourceArea": 56747
+      },
+      {
+        "index": 6,
+        "file": "pose_06.png",
+        "bounds": [
+          792,
+          401,
+          1124,
+          664
+        ],
+        "sourceArea": 59437
+      },
+      {
+        "index": 7,
+        "file": "pose_07.png",
+        "bounds": [
+          1164,
+          401,
+          1495,
+          667
+        ],
+        "sourceArea": 57328
+      },
+      {
+        "index": 8,
+        "file": "pose_08.png",
+        "bounds": [
+          1294,
+          657,
+          1523,
+          976
+        ],
+        "sourceArea": 45393
+      },
+      {
+        "index": 9,
+        "file": "pose_09.png",
+        "bounds": [
+          357,
+          673,
+          621,
+          976
+        ],
+        "sourceArea": 53254
+      },
+      {
+        "index": 10,
+        "file": "pose_10.png",
+        "bounds": [
+          14,
+          724,
+          363,
+          973
+        ],
+        "sourceArea": 55775
+      },
+      {
+        "index": 11,
+        "file": "pose_11.png",
+        "bounds": [
+          618,
+          740,
+          944,
+          973
+        ],
+        "sourceArea": 50636
+      },
+      {
+        "index": 12,
+        "file": "pose_12.png",
+        "bounds": [
+          947,
+          799,
+          1302,
+          987
+        ],
+        "sourceArea": 46351
+      }
+    ]
+  },
+  "chico2": {
+    "source": "/Users/gustavonorberto/Library/Mobile Documents/com~apple~CloudDocs/Projetos/ChicoPet/assets/sprites/chico2.png",
+    "backgroundMode": "checker",
+    "poses": [
+      {
+        "index": 1,
+        "file": "pose_01.png",
+        "bounds": [
+          49,
+          11,
+          276,
+          267
+        ],
+        "sourceArea": 38514
+      },
+      {
+        "index": 2,
+        "file": "pose_02.png",
+        "bounds": [
+          328,
+          20,
+          591,
+          268
+        ],
+        "sourceArea": 39876
+      },
+      {
+        "index": 3,
+        "file": "pose_03.png",
+        "bounds": [
+          1275,
+          20,
+          1504,
+          272
+        ],
+        "sourceArea": 38748
+      },
+      {
+        "index": 4,
+        "file": "pose_04.png",
+        "bounds": [
+          924,
+          24,
+          1228,
+          272
+        ],
+        "sourceArea": 44957
+      },
+      {
+        "index": 5,
+        "file": "pose_05.png",
+        "bounds": [
+          612,
+          27,
+          875,
+          272
+        ],
+        "sourceArea": 40725
+      },
+      {
+        "index": 6,
+        "file": "pose_06.png",
+        "bounds": [
+          25,
+          285,
+          276,
+          514
+        ],
+        "sourceArea": 36737
+      },
+      {
+        "index": 7,
+        "file": "pose_07.png",
+        "bounds": [
+          333,
+          296,
+          613,
+          514
+        ],
+        "sourceArea": 40741
+      },
+      {
+        "index": 8,
+        "file": "pose_08.png",
+        "bounds": [
+          927,
+          302,
+          1206,
+          514
+        ],
+        "sourceArea": 38961
+      },
+      {
+        "index": 9,
+        "file": "pose_09.png",
+        "bounds": [
+          1223,
+          302,
+          1501,
+          514
+        ],
+        "sourceArea": 37302
+      },
+      {
+        "index": 10,
+        "file": "pose_10.png",
+        "bounds": [
+          636,
+          305,
+          908,
+          514
+        ],
+        "sourceArea": 37519
+      },
+      {
+        "index": 11,
+        "file": "pose_11.png",
+        "bounds": [
+          1290,
+          509,
+          1479,
+          755
+        ],
+        "sourceArea": 30187
+      },
+      {
+        "index": 12,
+        "file": "pose_12.png",
+        "bounds": [
+          19,
+          538,
+          306,
+          735
+        ],
+        "sourceArea": 35020
+      },
+      {
+        "index": 13,
+        "file": "pose_13.png",
+        "bounds": [
+          645,
+          538,
+          947,
+          738
+        ],
+        "sourceArea": 38587
+      },
+      {
+        "index": 14,
+        "file": "pose_14.png",
+        "bounds": [
+          345,
+          538,
+          610,
+          747
+        ],
+        "sourceArea": 36542
+      },
+      {
+        "index": 15,
+        "file": "pose_15.png",
+        "bounds": [
+          967,
+          540,
+          1226,
+          751
+        ],
+        "sourceArea": 34947
+      },
+      {
+        "index": 16,
+        "file": "pose_16.png",
+        "bounds": [
+          54,
+          744,
+          247,
+          1004
+        ],
+        "sourceArea": 31236
+      },
+      {
+        "index": 17,
+        "file": "pose_17.png",
+        "bounds": [
+          1273,
+          758,
+          1497,
+          1005
+        ],
+        "sourceArea": 32404
+      },
+      {
+        "index": 18,
+        "file": "pose_18.png",
+        "bounds": [
+          288,
+          786,
+          567,
+          981
+        ],
+        "sourceArea": 31957
+      },
+      {
+        "index": 19,
+        "file": "pose_19.png",
+        "bounds": [
+          583,
+          795,
+          912,
+          981
+        ],
+        "sourceArea": 39327
+      },
+      {
+        "index": 20,
+        "file": "pose_20.png",
+        "bounds": [
+          931,
+          834,
+          1253,
+          1002
+        ],
+        "sourceArea": 37889
+      }
+    ]
+  },
+  "chico3": {
+    "source": "/Users/gustavonorberto/Library/Mobile Documents/com~apple~CloudDocs/Projetos/ChicoPet/assets/sprites/chico3.png",
+    "backgroundMode": "white",
+    "poses": [
+      {
+        "index": 1,
+        "file": "pose_01.png",
+        "bounds": [
+          18,
+          39,
+          273,
+          394
+        ],
+        "sourceArea": 49461
+      },
+      {
+        "index": 2,
+        "file": "pose_02.png",
+        "bounds": [
+          283,
+          88,
+          527,
+          428
+        ],
+        "sourceArea": 44429
+      },
+      {
+        "index": 3,
+        "file": "pose_03.png",
+        "bounds": [
+          539,
+          108,
+          785,
+          428
+        ],
+        "sourceArea": 44940
+      },
+      {
+        "index": 4,
+        "file": "pose_04.png",
+        "bounds": [
+          802,
+          156,
+          1047,
+          406
+        ],
+        "sourceArea": 35806
+      },
+      {
+        "index": 5,
+        "file": "pose_05.png",
+        "bounds": [
+          1038,
+          147,
+          1281,
+          415
+        ],
+        "sourceArea": 39106
+      },
+      {
+        "index": 6,
+        "file": "pose_06.png",
+        "bounds": [
+          1288,
+          192,
+          1519,
+          416
+        ],
+        "sourceArea": 38408
+      },
+      {
+        "index": 7,
+        "file": "pose_07.png",
+        "bounds": [
+          35,
+          486,
+          315,
+          729
+        ],
+        "sourceArea": 40115
+      },
+      {
+        "index": 8,
+        "file": "pose_08.png",
+        "bounds": [
+          352,
+          489,
+          606,
+          744
+        ],
+        "sourceArea": 38370
+      },
+      {
+        "index": 9,
+        "file": "pose_09.png",
+        "bounds": [
+          636,
+          489,
+          864,
+          750
+        ],
+        "sourceArea": 34893
+      },
+      {
+        "index": 10,
+        "file": "pose_10.png",
+        "bounds": [
+          886,
+          489,
+          1097,
+          750
+        ],
+        "sourceArea": 33406
+      },
+      {
+        "index": 11,
+        "file": "pose_11.png",
+        "bounds": [
+          1346,
+          505,
+          1517,
+          763
+        ],
+        "sourceArea": 27324
+      },
+      {
+        "index": 12,
+        "file": "pose_12.png",
+        "bounds": [
+          1120,
+          513,
+          1330,
+          766
+        ],
+        "sourceArea": 32092
+      },
+      {
+        "index": 13,
+        "file": "pose_13.png",
+        "bounds": [
+          1341,
+          778,
+          1509,
+          1010
+        ],
+        "sourceArea": 25942
+      },
+      {
+        "index": 14,
+        "file": "pose_14.png",
+        "bounds": [
+          37,
+          786,
+          307,
+          1005
+        ],
+        "sourceArea": 36344
+      },
+      {
+        "index": 15,
+        "file": "pose_15.png",
+        "bounds": [
+          1120,
+          791,
+          1309,
+          1008
+        ],
+        "sourceArea": 27727
+      },
+      {
+        "index": 16,
+        "file": "pose_16.png",
+        "bounds": [
+          837,
+          808,
+          1081,
+          1005
+        ],
+        "sourceArea": 31554
+      },
+      {
+        "index": 17,
+        "file": "pose_17.png",
+        "bounds": [
+          323,
+          819,
+          580,
+          1005
+        ],
+        "sourceArea": 30417
+      },
+      {
+        "index": 18,
+        "file": "pose_18.png",
+        "bounds": [
+          594,
+          832,
+          836,
+          1005
+        ],
+        "sourceArea": 26160
+      }
+    ]
+  }
+}
