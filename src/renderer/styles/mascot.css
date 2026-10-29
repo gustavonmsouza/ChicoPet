@@ -1,0 +1,83 @@
+:root {
+  --ink: #2b1d16;        /* marrom-escuro da pelagem: usado no lugar do preto puro */
+  --paper: #fff8e8;      /* fundo do balão */
+  --caramel: #d9923f;    /* caramelo da cabeça do Chico: sombra do balão */
+  --px: 4px;             /* "pixel" da interface */
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent; /* essencial para a janela transparente */
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.chico {
+  position: absolute;
+  left: 50%;
+  bottom: var(--px);
+  translate: -50% 0;
+  cursor: grab;
+  -webkit-user-drag: none;
+}
+.chico.dragging { cursor: grabbing; }
+
+/* Balão de fala: bordas "em degrau" feitas com box-shadow, sombra dura em caramelo. */
+.bubble {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--sprite-h, 150px) + 24px);
+  margin-inline: auto;
+  width: max-content;
+  max-width: 236px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 14px/1.35 ui-monospace, "SF Mono", Menlo, monospace;
+  text-align: center;
+  pointer-events: none; /* o balão nunca bloqueia cliques nos apps de trás */
+  transform-origin: 50% 100%;
+  box-shadow:
+    0 calc(var(--px) * -1) 0 0 var(--ink),
+    0 var(--px) 0 0 var(--ink),
+    calc(var(--px) * -1) 0 0 0 var(--ink),
+    var(--px) 0 0 0 var(--ink),
+    calc(var(--px) * 2) calc(var(--px) * 2) 0 0 var(--caramel);
+  animation: pop 140ms steps(3) both;
+}
+.bubble[hidden] { display: none; }
+
+/* Pontinha do balão, também em degrau. */
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--px) * -2);
+  width: calc(var(--px) * 2);
+  height: calc(var(--px) * 2);
+  margin-left: calc(var(--px) * -1);
+  background: var(--paper);
+  box-shadow:
+    calc(var(--px) * -1) 0 0 0 var(--ink),
+    var(--px) 0 0 0 var(--ink),
+    0 var(--px) 0 0 var(--ink);
+}
+
+@keyframes pop {
+  from { scale: 0.85; opacity: 0; }
+  to   { scale: 1;    opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble { animation: none; }
+}

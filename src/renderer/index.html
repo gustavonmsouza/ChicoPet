@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <!-- CSP: a página só carrega scripts, estilos e imagens do próprio app. Nada de código vindo de fora. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'">
+  <title>Chico</title>
+  <link rel="stylesheet" href="styles/mascot.css">
+</head>
+<body>
+  <main class="stage">
+    <div id="bubble" class="bubble" role="status" aria-live="polite" hidden></div>
+    <img id="chico" class="chico" data-hit alt="Chico, o Yorkshire" draggable="false">
+  </main>
+  <script type="module" src="scripts/app.js"></script>
+</body>
+</html>

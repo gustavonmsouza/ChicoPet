@@ -1,0 +1,17 @@
+{
+  "name": "chico-desktop",
+  "version": "0.1.0",
+  "description": "Chico Desktop Companion: um mascote em pixel art que vive na área de trabalho",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "electron": "^45.1.0"
+  }
+}
