@@ -25,7 +25,7 @@ npm test        # testes unitários (node:test)
 ## Estrutura
 ```
 assets/sprites/chico*.png  folhas-fonte originais, preservadas sem alteração
-assets/sprites/final/      frames usados pelo app: RGBA, canvas e paleta comuns
+assets/sprites/normalized/ quadros usados pelo app: RGBA, canvas e paleta comuns
 assets/icons/     ícones da barra de menus
 src/main/         processo principal: janela, tray, IPC
 src/preload/      ponte segura entre a página e o processo principal
@@ -33,6 +33,8 @@ src/renderer/     página: HTML, CSS, sprites, estados, personalidade
 tests/            testes unitários
 tools/            gerador determinístico dos sprites finais (Python padrão, sem dependências)
 ```
+Os caminhos e módulos de código seguem os nomes convencionais em inglês; os arquivos de imagem usam nomes em
+português, como `caminhada-direita-01.png` e `queda-esquerda-01.png`.
 
 ## Como substituir os sprites
 As folhas-fonte ficam em `assets/sprites/chico1.png`, `chico2.png` e `chico3.png`. Para reconstruir os
@@ -65,7 +67,7 @@ virtual, calculado pela área útil do monitor e por `groundMargin`; ao soltar n
 e passa por recuperação. Arrastar durante a queda cancela a física. Caminhada e atividades de repouso são restritas ao chão.
 
 ## Recursos gráficos e limitações
-As poses utilizadas pelo app são geradas em `assets/sprites/final/`. Cada frame tem fundo transparente, canvas de
+As poses utilizadas pelo app são geradas em `assets/sprites/normalized/`. Cada quadro tem fundo transparente, canvas de
 640×512, linha de chão comum e uma paleta única. O gerador remove o fundo branco/xadrez inclusive nos espaços entre
 as patas e limpa a borda neutra deixada pelas folhas-fonte. Isso impede flashes de tamanho, manchas de fundo e trocas
 de tom quando uma animação avança.

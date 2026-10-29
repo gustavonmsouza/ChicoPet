@@ -748,379 +748,379 @@
   ],
   "frames": [
     {
-      "name": "idle",
+      "name": "parado",
       "source": "chico1",
       "pose": 1,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
-      "file": "idle.png"
+      "file": "parado.png"
     },
     {
-      "name": "dragging",
+      "name": "arrastando",
       "source": "chico1",
       "pose": 1,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
-      "file": "dragging.png"
+      "file": "arrastando.png"
     },
     {
-      "name": "curious",
+      "name": "curioso",
       "source": "chico1",
       "pose": 2,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "curious.png"
+      "file": "curioso.png"
     },
     {
-      "name": "happy",
+      "name": "feliz",
       "source": "chico3",
       "pose": 13,
       "anchor": "ground",
       "fit": "height",
       "size": 400,
-      "file": "happy.png"
+      "file": "feliz.png"
     },
     {
-      "name": "sitting",
+      "name": "sentado",
       "source": "chico3",
       "pose": 13,
       "anchor": "ground",
       "fit": "height",
       "size": 400,
-      "file": "sitting.png"
+      "file": "sentado.png"
     },
     {
-      "name": "sleeping",
+      "name": "dormindo",
       "source": "chico3",
       "pose": 18,
       "anchor": "ground",
       "fit": "width",
       "size": 440,
-      "file": "sleeping.png"
+      "file": "dormindo.png"
     },
     {
-      "name": "walk-left-01",
+      "name": "caminhada-esquerda-01",
       "source": "chico2",
       "pose": 7,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "walk-left-01.png"
+      "file": "caminhada-esquerda-01.png"
     },
     {
-      "name": "walk-left-02",
+      "name": "caminhada-esquerda-02",
       "source": "chico2",
       "pose": 8,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "walk-left-02.png"
+      "file": "caminhada-esquerda-02.png"
     },
     {
-      "name": "walk-left-03",
+      "name": "caminhada-esquerda-03",
       "source": "chico2",
       "pose": 9,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "walk-left-03.png"
+      "file": "caminhada-esquerda-03.png"
     },
     {
-      "name": "walk-left-04",
+      "name": "caminhada-esquerda-04",
       "source": "chico2",
       "pose": 10,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "walk-left-04.png"
+      "file": "caminhada-esquerda-04.png"
     },
     {
-      "name": "walk-right-01",
+      "name": "caminhada-direita-01",
       "source": "chico2",
       "pose": 7,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "walk-right-01.png"
+      "file": "caminhada-direita-01.png"
     },
     {
-      "name": "walk-right-02",
+      "name": "caminhada-direita-02",
       "source": "chico2",
       "pose": 8,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "walk-right-02.png"
+      "file": "caminhada-direita-02.png"
     },
     {
-      "name": "walk-right-03",
+      "name": "caminhada-direita-03",
       "source": "chico2",
       "pose": 9,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "walk-right-03.png"
+      "file": "caminhada-direita-03.png"
     },
     {
-      "name": "walk-right-04",
+      "name": "caminhada-direita-04",
       "source": "chico2",
       "pose": 10,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "walk-right-04.png"
+      "file": "caminhada-direita-04.png"
     },
     {
-      "name": "run-left-01",
+      "name": "corrida-esquerda-01",
       "source": "chico2",
       "pose": 12,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "run-left-01.png"
+      "file": "corrida-esquerda-01.png"
     },
     {
-      "name": "run-left-02",
+      "name": "corrida-esquerda-02",
       "source": "chico2",
       "pose": 13,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "run-left-02.png"
+      "file": "corrida-esquerda-02.png"
     },
     {
-      "name": "run-left-03",
+      "name": "corrida-esquerda-03",
       "source": "chico2",
       "pose": 14,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "run-left-03.png"
+      "file": "corrida-esquerda-03.png"
     },
     {
-      "name": "run-left-04",
+      "name": "corrida-esquerda-04",
       "source": "chico2",
       "pose": 7,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": false,
-      "file": "run-left-04.png"
+      "file": "corrida-esquerda-04.png"
     },
     {
-      "name": "run-right-01",
+      "name": "corrida-direita-01",
       "source": "chico2",
       "pose": 12,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "run-right-01.png"
+      "file": "corrida-direita-01.png"
     },
     {
-      "name": "run-right-02",
+      "name": "corrida-direita-02",
       "source": "chico2",
       "pose": 13,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "run-right-02.png"
+      "file": "corrida-direita-02.png"
     },
     {
-      "name": "run-right-03",
+      "name": "corrida-direita-03",
       "source": "chico2",
       "pose": 14,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "run-right-03.png"
+      "file": "corrida-direita-03.png"
     },
     {
-      "name": "run-right-04",
+      "name": "corrida-direita-04",
       "source": "chico2",
       "pose": 7,
       "anchor": "ground",
       "fit": "height",
       "size": 410,
       "mirror": true,
-      "file": "run-right-04.png"
+      "file": "corrida-direita-04.png"
     },
     {
-      "name": "fall-right-01",
+      "name": "queda-direita-01",
       "source": "chico3",
       "pose": 1,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": false,
-      "file": "fall-right-01.png"
+      "file": "queda-direita-01.png"
     },
     {
-      "name": "fall-right-02",
+      "name": "queda-direita-02",
       "source": "chico3",
       "pose": 2,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": false,
-      "file": "fall-right-02.png"
+      "file": "queda-direita-02.png"
     },
     {
-      "name": "fall-right-03",
+      "name": "queda-direita-03",
       "source": "chico3",
       "pose": 3,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": false,
-      "file": "fall-right-03.png"
+      "file": "queda-direita-03.png"
     },
     {
-      "name": "fall-right-04",
+      "name": "queda-direita-04",
       "source": "chico3",
       "pose": 4,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": false,
-      "file": "fall-right-04.png"
+      "file": "queda-direita-04.png"
     },
     {
-      "name": "fall-right-05",
+      "name": "queda-direita-05",
       "source": "chico3",
       "pose": 5,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": false,
-      "file": "fall-right-05.png"
+      "file": "queda-direita-05.png"
     },
     {
-      "name": "landing-right-01",
+      "name": "aterrissagem-direita-01",
       "source": "chico3",
       "pose": 6,
       "anchor": "ground",
       "fit": "extent",
       "size": 420,
       "mirror": false,
-      "file": "landing-right-01.png"
+      "file": "aterrissagem-direita-01.png"
     },
     {
-      "name": "recovery-right-01",
+      "name": "recuperacao-direita-01",
       "source": "chico3",
       "pose": 14,
       "anchor": "ground",
       "fit": "height",
       "size": 390,
       "mirror": false,
-      "file": "recovery-right-01.png"
+      "file": "recuperacao-direita-01.png"
     },
     {
-      "name": "recovery-right-02",
+      "name": "recuperacao-direita-02",
       "source": "chico3",
       "pose": 13,
       "anchor": "ground",
       "fit": "height",
       "size": 390,
       "mirror": false,
-      "file": "recovery-right-02.png"
+      "file": "recuperacao-direita-02.png"
     },
     {
-      "name": "fall-left-01",
+      "name": "queda-esquerda-01",
       "source": "chico3",
       "pose": 1,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": true,
-      "file": "fall-left-01.png"
+      "file": "queda-esquerda-01.png"
     },
     {
-      "name": "fall-left-02",
+      "name": "queda-esquerda-02",
       "source": "chico3",
       "pose": 2,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": true,
-      "file": "fall-left-02.png"
+      "file": "queda-esquerda-02.png"
     },
     {
-      "name": "fall-left-03",
+      "name": "queda-esquerda-03",
       "source": "chico3",
       "pose": 3,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": true,
-      "file": "fall-left-03.png"
+      "file": "queda-esquerda-03.png"
     },
     {
-      "name": "fall-left-04",
+      "name": "queda-esquerda-04",
       "source": "chico3",
       "pose": 4,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": true,
-      "file": "fall-left-04.png"
+      "file": "queda-esquerda-04.png"
     },
     {
-      "name": "fall-left-05",
+      "name": "queda-esquerda-05",
       "source": "chico3",
       "pose": 5,
       "anchor": "center",
       "fit": "extent",
       "size": 420,
       "mirror": true,
-      "file": "fall-left-05.png"
+      "file": "queda-esquerda-05.png"
     },
     {
-      "name": "landing-left-01",
+      "name": "aterrissagem-esquerda-01",
       "source": "chico3",
       "pose": 6,
       "anchor": "ground",
       "fit": "extent",
       "size": 420,
       "mirror": true,
-      "file": "landing-left-01.png"
+      "file": "aterrissagem-esquerda-01.png"
     },
     {
-      "name": "recovery-left-01",
+      "name": "recuperacao-esquerda-01",
       "source": "chico3",
       "pose": 14,
       "anchor": "ground",
       "fit": "height",
       "size": 390,
       "mirror": true,
-      "file": "recovery-left-01.png"
+      "file": "recuperacao-esquerda-01.png"
     },
     {
-      "name": "recovery-left-02",
+      "name": "recuperacao-esquerda-02",
       "source": "chico3",
       "pose": 13,
       "anchor": "ground",
       "fit": "height",
       "size": 390,
       "mirror": true,
-      "file": "recovery-left-02.png"
+      "file": "recuperacao-esquerda-02.png"
     }
   ]
 }

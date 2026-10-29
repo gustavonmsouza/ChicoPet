@@ -66,7 +66,7 @@ test('runtime frames have the common canvas and a transparent edge', () => {
 });
 
 test('runtime frames use the shared palette and contain no pale background matte', () => {
-  const manifestPath = join(process.cwd(), 'assets', 'sprites', 'final', 'manifest.json');
+  const manifestPath = join(process.cwd(), 'assets', 'sprites', 'normalized', 'manifest.json');
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   const palette = new Set(manifest.palette.map((color) => color.join(',')));
   const frames = new Set(allAnimations().flatMap((animation) => animation.frames));

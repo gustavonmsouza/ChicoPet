@@ -11,10 +11,10 @@ solid = a[..., 3] > 40
 
 # (nome, caixa de busca x0,y0,x1,y1, inverter_horizontalmente)
 regions = [
-    ("idle",  (0,   0,   775, 515),  True),   # em pé: na referência olha p/ esquerda -> inverte
-    ("walk",  (775, 0,   1536, 515), False),
-    ("happy", (0,   515, 775, 1024), False),
-    ("sleep", (775, 515, 1536, 1024), False),
+    ("parado",  (0,   0,   775, 515),  True),   # em pé: na referência olha p/ esquerda -> inverte
+    ("caminhar",  (775, 0,   1536, 515), False),
+    ("feliz", (0,   515, 775, 1024), False),
+    ("dormir", (775, 515, 1536, 1024), False),
 ]
 PAD = 4
 for name, (x0, y0, x1, y1), flip in regions:
@@ -28,7 +28,7 @@ for name, (x0, y0, x1, y1), flip in regions:
     print(name, sprite.size)
 
 # ícones da barra de menus (22 px e 44 px de altura) a partir da pose sentada
-happy = Image.open(f"{out}/sprites/happy.png")
+feliz = Image.open(f"{out}/sprites/feliz.png")
 for h, suffix in ((22, ""), (44, "@2x")):
-    w = round(happy.width * h / happy.height)
-    happy.resize((w, h), Image.LANCZOS).save(f"{out}/icons/tray{suffix}.png")
+    w = round(feliz.width * h / feliz.height)
+    feliz.resize((w, h), Image.LANCZOS).save(f"{out}/icons/tray{suffix}.png")

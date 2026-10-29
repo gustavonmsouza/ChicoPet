@@ -66,19 +66,19 @@ def build_specs():
     specs = [
         # Chico 1 is used only where its original alpha is useful.  Its edge
         # colors are normalized with the same palette as the other two sheets.
-        {"name": "idle", "source": "chico1", "pose": 1, "anchor": "ground", "fit": "height", "size": 410},
-        {"name": "dragging", "source": "chico1", "pose": 1, "anchor": "ground", "fit": "height", "size": 410},
-        {"name": "curious", "source": "chico1", "pose": 2, "anchor": "ground", "fit": "height", "size": 410, "mirror": True},
-        {"name": "happy", "source": "chico3", "pose": 13, "anchor": "ground", "fit": "height", "size": 400},
-        {"name": "sitting", "source": "chico3", "pose": 13, "anchor": "ground", "fit": "height", "size": 400},
-        {"name": "sleeping", "source": "chico3", "pose": 18, "anchor": "ground", "fit": "width", "size": 440},
+        {"name": "parado", "source": "chico1", "pose": 1, "anchor": "ground", "fit": "height", "size": 410},
+        {"name": "arrastando", "source": "chico1", "pose": 1, "anchor": "ground", "fit": "height", "size": 410},
+        {"name": "curioso", "source": "chico1", "pose": 2, "anchor": "ground", "fit": "height", "size": 410, "mirror": True},
+        {"name": "feliz", "source": "chico3", "pose": 13, "anchor": "ground", "fit": "height", "size": 400},
+        {"name": "sentado", "source": "chico3", "pose": 13, "anchor": "ground", "fit": "height", "size": 400},
+        {"name": "dormindo", "source": "chico3", "pose": 18, "anchor": "ground", "fit": "width", "size": 440},
     ]
 
     # The source walking poses face left.  Write an actual right-facing copy
     # and retain the source-facing left copy, instead of relying on a global
     # CSS transform whose convention can conflict with another sheet.
-    for state, poses in (("walk", (7, 8, 9, 10)), ("run", (12, 13, 14, 7))):
-        for direction, mirror in (("left", False), ("right", True)):
+    for state, poses in (("caminhada", (7, 8, 9, 10)), ("corrida", (12, 13, 14, 7))):
+        for direction, mirror in (("esquerda", False), ("direita", True)):
             for index, pose in enumerate(poses, 1):
                 specs.append({
                     "name": f"{state}-{direction}-{index:02d}",
@@ -88,20 +88,20 @@ def build_specs():
 
     # These are a tumble sequence.  Each direction is stored as a real file
     # so a later renderer cannot accidentally apply a second mirror.
-    for direction, mirror in (("right", False), ("left", True)):
+    for direction, mirror in (("direita", False), ("esquerda", True)):
         for index, pose in enumerate((1, 2, 3, 4, 5), 1):
             specs.append({
-                "name": f"fall-{direction}-{index:02d}",
+                "name": f"queda-{direction}-{index:02d}",
                 "source": "chico3", "pose": pose, "anchor": "center",
                 "fit": "extent", "size": 420, "mirror": mirror,
             })
         specs.append({
-            "name": f"landing-{direction}-01", "source": "chico3", "pose": 6,
+            "name": f"aterrissagem-{direction}-01", "source": "chico3", "pose": 6,
             "anchor": "ground", "fit": "extent", "size": 420, "mirror": mirror,
         })
         for index, pose in enumerate((14, 13), 1):
             specs.append({
-                "name": f"recovery-{direction}-{index:02d}",
+                "name": f"recuperacao-{direction}-{index:02d}",
                 "source": "chico3", "pose": pose, "anchor": "ground",
                 "fit": "height", "size": 390, "mirror": mirror,
             })
@@ -348,7 +348,7 @@ def apply_palette(pixels, palette):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--output", type=Path, default=Path("assets/sprites/final"))
+    parser.add_argument("--output", type=Path, default=Path("assets/sprites/normalized"))
     args = parser.parse_args()
     root = args.root.resolve()
     output = (root / args.output).resolve()
