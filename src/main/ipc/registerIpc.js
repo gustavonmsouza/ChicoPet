@@ -15,6 +15,8 @@ function registerIpc({ getWindow, buildContextMenu }) {
   const behavior = new AutonomousController({
     getWindow,
     getWorkArea: (bounds) => screen.getDisplayMatching(bounds).workArea,
+    groundMargin: config.window.groundMargin,
+    ...config.physics,
     onState: (value) => {
       const win = getWindow();
       if (win && !win.isDestroyed()) win.webContents.send(channels.AUTONOMOUS_STATE, value);
@@ -38,11 +40,15 @@ function registerIpc({ getWindow, buildContextMenu }) {
     behavior.startDrag();
     stopDrag();
     const startCursor = screen.getCursorScreenPoint();
+    let lastCursor = startCursor;
     const startBounds = win.getBounds();
     // O processo principal consulta o cursor sozinho: o renderer não precisa (nem pode) mandar posições.
     dragTimer = setInterval(() => {
       if (win.isDestroyed()) return stopDrag();
       const cursor = screen.getCursorScreenPoint();
+      const horizontalDelta = cursor.x - lastCursor.x;
+      if (Math.abs(horizontalDelta) >= 2) behavior.setDirection(Math.sign(horizontalDelta));
+      lastCursor = cursor;
       const x = Math.round(startBounds.x + cursor.x - startCursor.x);
       const y = Math.round(startBounds.y + cursor.y - startCursor.y);
       const now = win.getBounds();

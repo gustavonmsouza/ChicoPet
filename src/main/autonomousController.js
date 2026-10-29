@@ -3,13 +3,16 @@
 // One owner for autonomous behavior and window movement. Dependencies are injected for tests.
 const STATES = Object.freeze({
   IDLE: 'IDLE', WALKING: 'WALKING', RUNNING: 'RUNNING', SLEEPING: 'SLEEPING',
-  HAPPY: 'HAPPY', CURIOUS: 'CURIOUS', INTERACTING: 'INTERACTING',
+  HAPPY: 'HAPPY', CURIOUS: 'CURIOUS', INTERACTING: 'INTERACTING', SITTING: 'SITTING',
+  DRAGGING: 'DRAGGING', FALLING: 'FALLING', LANDING: 'LANDING', RECOVERING: 'RECOVERING',
 });
 
 class AutonomousController {
   constructor({ getWindow, getWorkArea, onState = () => {}, random = Math.random,
     setIntervalFn = setInterval, clearIntervalFn = clearInterval, setTimeoutFn = setTimeout,
-    clearTimeoutFn = clearTimeout, now = Date.now, tickMs = 40 } = {}) {
+    clearTimeoutFn = clearTimeout, now = Date.now, tickMs = 40,
+    groundMargin = 8, gravity = 1650, maxFallSpeed = 1250,
+    groundSnapTolerance = 8, landingMs = 420, recoveryMs = 520 } = {}) {
     this.getWindow = getWindow;
     this.getWorkArea = getWorkArea;
     this.onState = onState;
@@ -20,6 +23,12 @@ class AutonomousController {
     this.clearTimeoutFn = clearTimeoutFn;
     this.now = now;
     this.tickMs = tickMs;
+    this.groundMargin = groundMargin;
+    this.gravity = gravity;
+    this.maxFallSpeed = maxFallSpeed;
+    this.groundSnapTolerance = groundSnapTolerance;
+    this.landingMs = landingMs;
+    this.recoveryMs = recoveryMs;
     this.state = STATES.IDLE;
     this.direction = 1;
     this.running = false;
@@ -31,6 +40,7 @@ class AutonomousController {
     this.resumeTimer = null;
     this.stateTimer = null;
     this.interactionTimer = null;
+    this.fallVelocity = 0;
   }
 
   start() {
@@ -59,6 +69,12 @@ class AutonomousController {
     return true;
   }
 
+  setDirection(direction) {
+    if (![-1, 1].includes(direction) || direction === this.direction) return;
+    this.direction = direction;
+    this.publish();
+  }
+
   publish() { this.onState({ state: this.state, direction: this.direction }); }
 
   scheduleActivity(delay) { this.nextActivityAt = this.now() + delay; }
@@ -67,14 +83,19 @@ class AutonomousController {
 
   beginActivity() {
     const roll = this.random();
+    if (!this.isGrounded()) return;
     if (roll < 0.16) {
       this.targetX = null;
       this.setState(STATES.SLEEPING);
       this.scheduleTimedState(STATES.IDLE, this.activityDelay(18000, 36000), 5000, 11000);
-    } else if (roll < 0.31) {
+    } else if (roll < 0.30) {
       this.targetX = null;
       this.setState(STATES.CURIOUS);
       this.scheduleTimedState(STATES.IDLE, this.activityDelay(1800, 4200), 1800, 5000);
+    } else if (roll < 0.45) {
+      this.targetX = null;
+      this.setState(STATES.SITTING);
+      this.scheduleTimedState(STATES.IDLE, this.activityDelay(4500, 10000), 3000, 8000);
     } else {
       this.chooseDestination(roll > 0.94);
     }
@@ -96,6 +117,8 @@ class AutonomousController {
     if (!win || win.isDestroyed()) return;
     const bounds = win.getBounds();
     const area = this.getWorkArea(bounds);
+    const floorY = this.floorY(bounds, area);
+    if (Math.abs(bounds.y - floorY) > this.groundSnapTolerance) return;
     const minX = area.x;
     const maxX = Math.max(minX, area.x + area.width - bounds.width);
     const currentX = Math.max(minX, Math.min(maxX, bounds.x));
@@ -123,6 +146,18 @@ class AutonomousController {
     const now = this.now();
     const elapsed = Math.min(100, Math.max(0, now - this.lastTick));
     this.lastTick = now;
+    if (this.state === STATES.FALLING) {
+      this.advanceFall(win, elapsed);
+      return;
+    }
+    if ([STATES.DRAGGING, STATES.LANDING, STATES.RECOVERING].includes(this.state)) return;
+    const bounds = win.getBounds();
+    const floorY = this.floorY(bounds, this.getWorkArea(bounds));
+    if (bounds.y < floorY - this.groundSnapTolerance) {
+      this.startFall();
+      return;
+    }
+    if (bounds.y !== floorY) win.setBounds({ ...bounds, y: floorY });
     if (this.state === STATES.WALKING || this.state === STATES.RUNNING) {
       this.move(win, elapsed);
       return;
@@ -136,24 +171,25 @@ class AutonomousController {
     if (this.targetX === null) return;
     const bounds = win.getBounds();
     const area = this.getWorkArea(bounds);
+    const floorY = this.floorY(bounds, area);
     const maxX = Math.max(area.x, area.x + area.width - bounds.width);
     const target = Math.max(area.x, Math.min(maxX, this.targetX));
     const remaining = target - bounds.x;
     const speed = this.state === STATES.RUNNING ? 230 : 105;
     const step = Math.max(1, speed * elapsed / 1000);
     if (Math.abs(remaining) <= step) {
-      win.setBounds({ ...bounds, x: target });
+      win.setBounds({ ...bounds, x: target, y: floorY });
       this.targetX = null;
       this.setState(STATES.IDLE);
       this.scheduleActivity(this.activityDelay(3500, 10000));
     } else {
       this.direction = Math.sign(remaining);
-      win.setBounds({ ...bounds, x: Math.round(bounds.x + this.direction * step) });
+      win.setBounds({ ...bounds, x: Math.round(bounds.x + this.direction * step), y: floorY });
     }
   }
 
   interact() {
-    if (!this.running || this.dragging) return;
+    if (!this.running || this.dragging || [STATES.FALLING, STATES.LANDING, STATES.RECOVERING].includes(this.state)) return;
     this.targetX = null;
     if (this.resumeTimer) this.clearTimeoutFn(this.resumeTimer);
     this.resumeTimer = null;
@@ -170,6 +206,7 @@ class AutonomousController {
 
   startDrag() {
     this.dragging = true;
+    this.fallVelocity = 0;
     this.targetX = null;
     if (this.resumeTimer) this.clearTimeoutFn(this.resumeTimer);
     this.resumeTimer = null;
@@ -177,11 +214,23 @@ class AutonomousController {
     this.stateTimer = null;
     if (this.interactionTimer) this.clearTimeoutFn(this.interactionTimer);
     this.interactionTimer = null;
+    this.setState(STATES.DRAGGING);
   }
 
   endDrag() {
     this.dragging = false;
     this.targetX = null;
+    const win = this.getWindow();
+    if (!win || win.isDestroyed()) return;
+    const bounds = win.getBounds();
+    const floorY = this.floorY(bounds, this.getWorkArea(bounds));
+    if (floorY - bounds.y > this.groundSnapTolerance) {
+      this.startFall();
+      return;
+    }
+    win.setBounds({ ...bounds, y: floorY });
+    this.setState(STATES.IDLE);
+    this.scheduleActivity(2200);
     if (this.resumeTimer) this.clearTimeoutFn(this.resumeTimer);
     this.resumeTimer = this.setTimeoutFn(() => {
       this.resumeTimer = null;
@@ -189,6 +238,59 @@ class AutonomousController {
       this.setState(STATES.IDLE);
       this.scheduleActivity(this.activityDelay(5000, 11000));
     }, 2200);
+  }
+
+  floorY(bounds, area = this.getWorkArea(bounds)) {
+    return Math.max(area.y, area.y + area.height - bounds.height - this.groundMargin);
+  }
+
+  isGrounded() {
+    const win = this.getWindow();
+    if (!win || win.isDestroyed()) return false;
+    const bounds = win.getBounds();
+    return Math.abs(bounds.y - this.floorY(bounds)) <= this.groundSnapTolerance;
+  }
+
+  startFall() {
+    const win = this.getWindow();
+    if (!this.running || this.dragging || !win || win.isDestroyed()) return;
+    if ([STATES.FALLING, STATES.LANDING, STATES.RECOVERING].includes(this.state)) return;
+    if (this.stateTimer) this.clearTimeoutFn(this.stateTimer);
+    if (this.interactionTimer) this.clearTimeoutFn(this.interactionTimer);
+    this.stateTimer = this.interactionTimer = null;
+    this.targetX = null;
+    this.fallVelocity = 0;
+    this.lastTick = this.now();
+    this.setState(STATES.FALLING);
+  }
+
+  advanceFall(win, elapsedMs) {
+    const bounds = win.getBounds();
+    const floorY = this.floorY(bounds, this.getWorkArea(bounds));
+    const dt = Math.min(0.1, Math.max(0, elapsedMs / 1000));
+    this.fallVelocity = Math.min(this.maxFallSpeed, this.fallVelocity + this.gravity * dt);
+    const nextY = bounds.y + this.fallVelocity * dt;
+    if (nextY >= floorY) {
+      win.setBounds({ ...bounds, y: floorY });
+      this.fallVelocity = 0;
+      this.setState(STATES.LANDING);
+      // Landing and recovery are a single guarded sequence; dragging cancels its timer.
+      if (this.stateTimer) this.clearTimeoutFn(this.stateTimer);
+      this.scheduleActivity(this.landingMs + this.recoveryMs);
+      this.stateTimer = this.setTimeoutFn(() => {
+        this.stateTimer = null;
+        if (!this.running || this.dragging || this.state !== STATES.LANDING) return;
+        this.setState(STATES.RECOVERING);
+        this.stateTimer = this.setTimeoutFn(() => {
+          this.stateTimer = null;
+          if (!this.running || this.dragging || this.state !== STATES.RECOVERING) return;
+          this.setState(STATES.IDLE);
+          this.scheduleActivity(this.activityDelay(3500, 9000));
+        }, this.recoveryMs);
+      }, this.landingMs);
+    } else {
+      win.setBounds({ ...bounds, y: Math.round(nextY) });
+    }
   }
 }
 

@@ -4,12 +4,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { AutonomousController, STATES } = require('../src/main/autonomousController');
 
-function rig({ x = -40, area = { x: -100, y: 0, width: 500, height: 400 }, random = () => 0.99 } = {}) {
+function rig({ x = -40, y, area = { x: -100, y: 0, width: 500, height: 400 }, random = () => 0.99, groundMargin = 8 } = {}) {
   let now = 1000;
   let intervalCallback;
   const timeouts = new Map();
   let nextId = 1;
-  const bounds = { x, y: 20, width: 100, height: 100 };
+  const bounds = { x, y: y ?? area.y + area.height - 100 - groundMargin, width: 100, height: 100 };
   const win = {
     isDestroyed: () => false,
     isVisible: () => true,
@@ -19,6 +19,7 @@ function rig({ x = -40, area = { x: -100, y: 0, width: 500, height: 400 }, rando
   const controller = new AutonomousController({
     getWindow: () => win,
     getWorkArea: () => area,
+    groundMargin,
     random,
     now: () => now,
     tickMs: 40,
@@ -76,6 +77,18 @@ test('dragging suspends autonomous movement and schedules a delayed resume', () 
   assert.ok(r.controller.nextActivityAt > r.now());
 });
 
+test('horizontal drag updates the retained facing direction for the fall', () => {
+  const r = rig();
+  const states = [];
+  r.controller.onState = ({ direction }) => states.push(direction);
+  r.controller.start();
+  r.controller.startDrag();
+  r.controller.setDirection(-1);
+  r.controller.endDrag();
+  assert.equal(r.controller.direction, -1);
+  assert.ok(states.includes(-1));
+});
+
 test('interaction cancels pending drag resume and returns from HAPPY to IDLE', () => {
   const r = rig();
   r.controller.start();
@@ -112,4 +125,57 @@ test('stop clears the interval and all pending timeout tasks', () => {
   assert.equal(r.timeouts.size, 0);
   assert.equal(r.controller.running, false);
   assert.equal(r.controller.timer, null);
+});
+
+test('release above ground falls with time-based gravity, lands and recovers', () => {
+  const r = rig({ x: -40, y: 30 });
+  r.controller.start();
+  r.controller.startDrag();
+  r.controller.endDrag();
+  assert.equal(r.controller.state, STATES.FALLING);
+  const floor = 400 - 100 - 8;
+  for (let i = 0; i < 20 && r.controller.state === STATES.FALLING; i++) r.tick(40);
+  assert.equal(r.controller.state, STATES.LANDING);
+  assert.equal(r.bounds.y, floor);
+  const landing = r.controller.stateTimer;
+  r.fireTimeout(landing);
+  assert.equal(r.controller.state, STATES.RECOVERING);
+  const recovery = r.controller.stateTimer;
+  r.fireTimeout(recovery);
+  assert.equal(r.controller.state, STATES.IDLE);
+  assert.equal(r.bounds.y, floor);
+});
+
+test('dragging during a fall cancels vertical movement and a new release restarts it', () => {
+  const r = rig({ y: 0 });
+  r.controller.start();
+  r.controller.startDrag();
+  r.controller.endDrag();
+  assert.equal(r.controller.state, STATES.FALLING);
+  r.tick(40);
+  const yDuringFall = r.bounds.y;
+  r.controller.startDrag();
+  r.tick(400);
+  assert.equal(r.controller.state, STATES.DRAGGING);
+  assert.equal(r.bounds.y, yDuringFall);
+  r.bounds.y = 100;
+  r.controller.endDrag();
+  assert.equal(r.controller.state, STATES.FALLING);
+});
+
+test('a release at the ground snaps to the configured floor without a fall', () => {
+  const r = rig({ y: 288, groundMargin: 8 });
+  r.controller.start();
+  r.controller.startDrag();
+  r.controller.endDrag();
+  assert.equal(r.controller.state, STATES.IDLE);
+  assert.equal(r.bounds.y, 292);
+});
+
+test('autonomous walking cannot start while the window is airborne', () => {
+  const r = rig({ y: 40 });
+  r.controller.start();
+  r.controller.chooseDestination();
+  assert.equal(r.controller.state, STATES.IDLE);
+  assert.equal(r.controller.targetX, null);
 });

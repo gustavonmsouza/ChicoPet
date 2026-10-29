@@ -27,6 +27,16 @@ test('máquina conhece corrida, curiosidade e interação', () => {
   assert.equal(chico.transitionTo(STATES.INTERACTING), true);
 });
 
+test('queda e aterrissagem bloqueiam caminhada até a recuperação', () => {
+  const chico = new Character();
+  assert.equal(chico.transitionTo(STATES.DRAGGING), true);
+  assert.equal(chico.transitionTo(STATES.FALLING), true);
+  assert.equal(chico.transitionTo(STATES.WALKING), false);
+  assert.equal(chico.transitionTo(STATES.LANDING), true);
+  assert.equal(chico.transitionTo(STATES.RECOVERING), true);
+  assert.equal(chico.transitionTo(STATES.IDLE), true);
+});
+
 test('onChange só dispara quando o estado muda de verdade', () => {
   const calls = [];
   const chico = new Character({ onChange: (s) => calls.push(s) });

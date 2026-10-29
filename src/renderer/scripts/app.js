@@ -1,10 +1,14 @@
 import { SPRITE_SCALE, BUBBLE_MS, CLICK_MOVE_THRESHOLD } from './config.js';
 import { SPRITES } from './sprites.js';
 import { Character, STATES, STATE_SPRITE } from './character.js';
+import { selectAnimation } from './animations.js';
+import { AnimationPlayer } from './animationPlayer.js';
 import { PHRASES, createPhrasePicker } from './personality.js';
 
 const chicoEl = document.getElementById('chico');
 const bubbleEl = document.getElementById('bubble');
+let currentRenderScale = SPRITE_SCALE;
+let currentDirection = 1;
 
 const pickClickPhrase = createPhrasePicker(PHRASES.click);
 const pickWakePhrase = createPhrasePicker(PHRASES.wake);
@@ -12,19 +16,39 @@ const pickWakePhrase = createPhrasePicker(PHRASES.wake);
 let bubbleTimer = null;
 
 // ---------- Sprite ----------
-function showSprite(name) {
-  chicoEl.src = SPRITES[name];
+const animationPlayer = new AnimationPlayer({ onFrame: (src) => { chicoEl.src = src; } });
+function showSprite(name) { if (SPRITES[name]) chicoEl.src = SPRITES[name]; }
+function playState(state) {
+  const animation = selectAnimation(state, currentDirection);
+  if (animation?.frames.length) {
+    currentRenderScale = animation.renderScale || SPRITE_SCALE;
+    animationPlayer.play(animation);
+  }
+  else {
+    animationPlayer.stop();
+    currentRenderScale = SPRITE_SCALE;
+    showSprite(STATE_SPRITE[state] || 'idle');
+  }
 }
 
 // Quando a imagem carrega, ajustamos o tamanho na tela e a altura em que o balão aparece.
 chicoEl.addEventListener('load', () => {
-  chicoEl.style.width = `${Math.round(chicoEl.naturalWidth * SPRITE_SCALE)}px`;
-  chicoEl.style.height = `${Math.round(chicoEl.naturalHeight * SPRITE_SCALE)}px`;
+  chicoEl.style.width = `${Math.round(chicoEl.naturalWidth * currentRenderScale)}px`;
+  chicoEl.style.height = `${Math.round(chicoEl.naturalHeight * currentRenderScale)}px`;
   document.documentElement.style.setProperty('--sprite-h', `${chicoEl.offsetHeight}px`);
 });
 
 // Pré-carrega todos os sprites para a troca de pose não piscar.
-for (const src of Object.values(SPRITES)) new Image().src = src;
+for (const value of Object.values(SPRITES)) {
+  const sources = Array.isArray(value)
+    ? value.flat(Infinity)
+    : value && typeof value === 'object'
+      ? Object.values(value).flat(Infinity)
+      : [value];
+  for (const src of sources) {
+    if (typeof src === 'string') new Image().src = src;
+  }
+}
 
 // ---------- Balão de fala ----------
 function say(text) {
@@ -38,13 +62,12 @@ function say(text) {
 
 // ---------- Estado do personagem ----------
 const character = new Character({
-  onChange: (state) => showSprite(STATE_SPRITE[state]),
+  onChange: playState,
 });
 
-function onChicoClick() {
-  const wasSleeping = character.state === STATES.SLEEPING;
+function onChicoClick(previousState) {
+  const wasSleeping = previousState === STATES.SLEEPING;
   window.chicoApi.interact();
-  character.forceState(STATES.HAPPY);
   if (wasSleeping) {
     say(pickWakePhrase());
   } else {
@@ -58,7 +81,7 @@ let press = null; // guarda onde o botão foi pressionado
 chicoEl.addEventListener('pointerdown', (event) => {
   if (event.button !== 0 || event.ctrlKey) return; // só botão esquerdo (ctrl+clique abre o menu)
   chicoEl.setPointerCapture(event.pointerId);      // continuamos recebendo eventos mesmo fora da imagem
-  press = { x: event.screenX, y: event.screenY, moved: false };
+  press = { x: event.screenX, y: event.screenY, moved: false, previousState: character.state };
   chicoEl.classList.add('dragging');
   window.chicoApi.dragStart();                        // o processo principal passa a mover a janela
 });
@@ -72,10 +95,11 @@ chicoEl.addEventListener('pointermove', (event) => {
 function finishPress(isClick) {
   if (!press) return;
   const wasClick = isClick && !press.moved;
+  const previousState = press.previousState;
   press = null;
   chicoEl.classList.remove('dragging');
   window.chicoApi.dragEnd();
-  if (wasClick) onChicoClick();
+  if (wasClick) onChicoClick(previousState);
 }
 chicoEl.addEventListener('pointerup', () => finishPress(true));
 chicoEl.addEventListener('pointercancel', () => finishPress(false));
@@ -109,9 +133,15 @@ window.chicoApi.onSetPose((pose) => {
 });
 
 window.chicoApi.onAutonomousState(({ state, direction }) => {
+  currentDirection = direction;
+  chicoEl.classList.toggle('faces-left', currentDirection < 0);
   const next = STATES[state];
   if (next) character.forceState(next);
-  chicoEl.classList.toggle('faces-left', direction < 0);
 });
 
-showSprite(STATE_SPRITE[character.state]);
+playState(character.state);
+document.addEventListener('visibilitychange', () => animationPlayer.setPaused(document.hidden));
+window.addEventListener('pagehide', () => {
+  animationPlayer.stop();
+  clearTimeout(bubbleTimer);
+});

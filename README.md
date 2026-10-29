@@ -30,7 +30,7 @@ src/main/         processo principal: janela, tray, IPC
 src/preload/      ponte segura entre a página e o processo principal
 src/renderer/     página: HTML, CSS, sprites, estados, personalidade
 tests/            testes unitários
-tools/            script que recorta os sprites da imagem de referência (Python + Pillow)
+tools/            script que recorta sprites das folhas PNG (Python padrão, sem dependências)
 ```
 
 ## Como substituir os sprites
@@ -52,13 +52,15 @@ IPC validado (origem e tipo), navegação e janelas novas bloqueadas.
 Janela transparente sem moldura, sempre no topo, arrastar, clicar, balão de fala, estados comportamentais,
 movimento autônomo gradual pela área útil do monitor, pausas, sono, curiosidade, corrida curta, reação a cliques,
 ocultar/mostrar, tray e reposicionamento ao mudar de monitor. O processo principal é o único controlador da posição;
-enquanto o mascote é arrastado, o movimento autônomo fica suspenso e retoma após uma pausa.
+enquanto o mascote é arrastado, o movimento autônomo fica suspenso e retoma após uma pausa. A janela inicia no chão
+virtual, calculado pela área útil do monitor e por `groundMargin`; ao soltar no ar, cai com gravidade limitada, aterrissa
+e passa por recuperação. Arrastar durante a queda cancela a física. Caminhada e atividades de repouso são restritas ao chão.
 
 ## Recursos gráficos e limitações
-Os quatro arquivos PNG atuais (`idle`, `walk`, `happy`, `sleep`) são imagens RGBA estáticas, com dimensões diferentes.
-O app usa a pose `walk` enquanto a janela se desloca, mas isso não é um ciclo de caminhada quadro a quadro. Corrida
-reutiliza a mesma pose; curiosidade reutiliza `idle`. Não há quadros adequados para alternância das patas, piscadas,
-respiração, pulo ou movimento de cauda, então esses efeitos não são simulados por deformação CSS.
+As três folhas enviadas foram recortadas em 50 PNGs RGBA individuais em `assets/sprites/extracted/`, com manifesto
+de origem e coordenadas. O recorte remove o fundo xadrez/branco conectado às bordas e o halo vermelho da primeira
+folha, preservando a paleta sombreada original do Chico em vez de aplicar uma recoloração que apague os detalhes.
+As poses extraídas agora alimentam ciclos de caminhada e corrida e as sequências de queda, aterrissagem e recuperação.
 
 Para animações reais, criar spritesheets transparentes com células de tamanho uniforme e origem alinhada: idle (2–4
 quadros de respiração/piscar), walk (4–6 quadros com patas alternadas), run (4–6 quadros com passada aérea), sleep
@@ -67,3 +69,12 @@ As poses devem manter silhueta, escala e ponto de contato no chão consistentes,
 
 Ainda não há interface de conversa nem ação de clique duplo implementada. A janela foi verificada por análise e testes
 automatizados de lógica; este ambiente não valida visualmente a janela transparente no macOS.
+
+### Queda e catálogo de animações
+`src/renderer/scripts/animations.js` cataloga estados, quadros, velocidade, repetição, prioridade e variações;
+`animationPlayer.js` controla uma sequência por vez e cancela o timer ao trocar ou ocultar a janela. As sequências
+usam as poses reais recortadas da folha enviada, incluindo queda de patas para cima, rolamento, aterrissagem e volta
+à posição sentada.
+O controlador mantém a direção da última caminhada, atualiza-a pelos movimentos horizontais do arraste e escolhe a
+variante correspondente: direita mantém a orientação da arte e esquerda a espelha. A limpeza de fundo e de bordas
+é aplicada igualmente às três fontes; detalhes de pelo e iluminação são preservados para manter a aparência pixel art.
