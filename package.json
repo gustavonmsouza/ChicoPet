@@ -2,16 +2,55 @@
   "name": "chico-desktop",
   "version": "0.1.0",
   "description": "Chico Desktop Companion: um mascote em pixel art que vive na área de trabalho",
+  "author": "ChicoPet",
   "main": "src/main/main.js",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gustavonmsouza/ChicoPet.git"
+  },
   "scripts": {
     "start": "electron .",
-    "test": "node --test"
+    "test": "node --test",
+    "test:smoke": "node tools/smoke_electron.cjs",
+    "test:smoke:packaged": "node tools/smoke_electron.cjs dist/mac-arm64/Chico.app/Contents/MacOS/Chico",
+    "dist:mac": "python3 tools/build_app_icon.py && electron-builder --mac"
   },
   "engines": {
     "node": ">=22.12.0"
   },
   "devDependencies": {
-    "electron": "^45.1.0"
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.gustavonmsouza.chicopet",
+    "productName": "Chico",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "icon": "assets/icons/chico.icns",
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    }
   }
 }

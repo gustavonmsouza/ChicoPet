@@ -1,5 +1,7 @@
 'use strict';
 
+const { ACTIVITY_MODES } = require('./preferences');
+
 // One owner for autonomous behavior and window movement. Dependencies are injected for tests.
 const STATES = Object.freeze({
   IDLE: 'IDLE', WALKING: 'WALKING', RUNNING: 'RUNNING', SLEEPING: 'SLEEPING',
@@ -8,13 +10,15 @@ const STATES = Object.freeze({
 });
 
 class AutonomousController {
-  constructor({ getWindow, getWorkArea, onState = () => {}, random = Math.random,
+  constructor({ getWindow, getWorkArea, getGroundArea, onState = () => {}, random = Math.random,
     setIntervalFn = setInterval, clearIntervalFn = clearInterval, setTimeoutFn = setTimeout,
     clearTimeoutFn = clearTimeout, now = Date.now, tickMs = 40,
-    groundMargin = 8, gravity = 1650, maxFallSpeed = 1250,
-    groundSnapTolerance = 8, landingMs = 420, recoveryMs = 520 } = {}) {
+    groundMargin = 0, gravity = 1650, maxFallSpeed = 1250,
+    groundSnapTolerance = 8, landingMs = 420, recoveryMs = 520,
+    activityEnabled = true, activityMode = 'balanced' } = {}) {
     this.getWindow = getWindow;
     this.getWorkArea = getWorkArea;
+    this.getGroundArea = getGroundArea || getWorkArea;
     this.onState = onState;
     this.random = random;
     this.setIntervalFn = setIntervalFn;
@@ -29,6 +33,12 @@ class AutonomousController {
     this.groundSnapTolerance = groundSnapTolerance;
     this.landingMs = landingMs;
     this.recoveryMs = recoveryMs;
+    if (typeof activityEnabled !== 'boolean') throw new TypeError('activityEnabled precisa ser booleano.');
+    if (!Object.hasOwn(ACTIVITY_MODES, activityMode)) {
+      throw new RangeError(`Modo de atividade inválido: ${activityMode}`);
+    }
+    this.activityEnabled = activityEnabled;
+    this.activityMode = activityMode;
     this.state = STATES.IDLE;
     this.direction = 1;
     this.running = false;
@@ -47,7 +57,12 @@ class AutonomousController {
     if (this.running) return;
     this.running = true;
     this.lastTick = this.now();
-    this.scheduleActivity(2500 + this.random() * 3500);
+    if (this.activityEnabled) {
+      const mode = ACTIVITY_MODES[this.activityMode];
+      this.scheduleActivity(this.activityDelay(mode.initialMin, mode.initialMax));
+    } else {
+      this.scheduleActivity(Number.POSITIVE_INFINITY);
+    }
     this.timer = this.setIntervalFn(() => this.tick(), this.tickMs);
     this.publish();
   }
@@ -81,7 +96,40 @@ class AutonomousController {
 
   activityDelay(min, max) { return min + this.random() * (max - min); }
 
+  setActivityEnabled(enabled) {
+    if (typeof enabled !== 'boolean') throw new TypeError('activityEnabled precisa ser booleano.');
+    if (enabled === this.activityEnabled) return;
+    this.activityEnabled = enabled;
+    if (!enabled) {
+      this.targetX = null;
+      if (this.resumeTimer) this.clearTimeoutFn(this.resumeTimer);
+      this.resumeTimer = null;
+      if (this.stateTimer && [STATES.SLEEPING, STATES.CURIOUS, STATES.SITTING].includes(this.state)) {
+        this.clearTimeoutFn(this.stateTimer);
+        this.stateTimer = null;
+      }
+      if ([STATES.WALKING, STATES.RUNNING, STATES.SLEEPING, STATES.CURIOUS, STATES.SITTING].includes(this.state)) {
+        this.setState(STATES.IDLE);
+      }
+      this.scheduleActivity(Number.POSITIVE_INFINITY);
+      return;
+    }
+    const mode = ACTIVITY_MODES[this.activityMode];
+    this.scheduleActivity(this.activityDelay(mode.initialMin, mode.initialMax));
+  }
+
+  setActivityMode(mode) {
+    if (!Object.hasOwn(ACTIVITY_MODES, mode)) throw new RangeError(`Modo de atividade inválido: ${mode}`);
+    if (mode === this.activityMode) return;
+    this.activityMode = mode;
+    if (this.activityEnabled) {
+      const current = ACTIVITY_MODES[mode];
+      this.scheduleActivity(this.activityDelay(current.initialMin, current.initialMax));
+    }
+  }
+
   beginActivity() {
+    if (!this.activityEnabled) return;
     const roll = this.random();
     if (!this.isGrounded()) return;
     if (roll < 0.16) {
@@ -112,12 +160,12 @@ class AutonomousController {
     }, duration);
   }
 
-  chooseDestination(run = false) {
+  chooseDestination(run = false, force = false) {
     const win = this.getWindow();
-    if (!win || win.isDestroyed()) return;
+    if (!win || win.isDestroyed() || (!this.activityEnabled && !force)) return;
     const bounds = win.getBounds();
     const area = this.getWorkArea(bounds);
-    const floorY = this.floorY(bounds, area);
+    const floorY = this.floorY(bounds, this.getGroundArea(bounds));
     if (Math.abs(bounds.y - floorY) > this.groundSnapTolerance) return;
     const minX = area.x;
     const maxX = Math.max(minX, area.x + area.width - bounds.width);
@@ -151,8 +199,13 @@ class AutonomousController {
       return;
     }
     if ([STATES.DRAGGING, STATES.LANDING, STATES.RECOVERING].includes(this.state)) return;
+    if (!this.activityEnabled && [STATES.WALKING, STATES.RUNNING, STATES.SLEEPING, STATES.CURIOUS, STATES.SITTING].includes(this.state)) {
+      this.targetX = null;
+      this.setState(STATES.IDLE);
+      return;
+    }
     const bounds = win.getBounds();
-    const floorY = this.floorY(bounds, this.getWorkArea(bounds));
+    const floorY = this.floorY(bounds, this.getGroundArea(bounds));
     if (bounds.y < floorY - this.groundSnapTolerance) {
       this.startFall();
       return;
@@ -162,7 +215,7 @@ class AutonomousController {
       this.move(win, elapsed);
       return;
     }
-    if (now >= this.nextActivityAt && ![STATES.HAPPY, STATES.INTERACTING].includes(this.state)) {
+    if (this.activityEnabled && now >= this.nextActivityAt && ![STATES.HAPPY, STATES.INTERACTING].includes(this.state)) {
       this.beginActivity();
     }
   }
@@ -171,17 +224,19 @@ class AutonomousController {
     if (this.targetX === null) return;
     const bounds = win.getBounds();
     const area = this.getWorkArea(bounds);
-    const floorY = this.floorY(bounds, area);
+    const floorY = this.floorY(bounds, this.getGroundArea(bounds));
     const maxX = Math.max(area.x, area.x + area.width - bounds.width);
     const target = Math.max(area.x, Math.min(maxX, this.targetX));
     const remaining = target - bounds.x;
-    const speed = this.state === STATES.RUNNING ? 230 : 105;
+    const mode = ACTIVITY_MODES[this.activityMode];
+    const speed = this.state === STATES.RUNNING ? mode.runSpeed : mode.walkSpeed;
     const step = Math.max(1, speed * elapsed / 1000);
     if (Math.abs(remaining) <= step) {
       win.setBounds({ ...bounds, x: target, y: floorY });
       this.targetX = null;
       this.setState(STATES.IDLE);
-      this.scheduleActivity(this.activityDelay(3500, 10000));
+      const mode = ACTIVITY_MODES[this.activityMode];
+      this.scheduleActivity(this.activityDelay(mode.pauseMin, mode.pauseMax));
     } else {
       this.direction = Math.sign(remaining);
       win.setBounds({ ...bounds, x: Math.round(bounds.x + this.direction * step), y: floorY });
@@ -204,6 +259,21 @@ class AutonomousController {
     }, 140);
   }
 
+  play() {
+    if (
+      !this.running
+      || this.dragging
+      || [STATES.FALLING, STATES.LANDING, STATES.RECOVERING].includes(this.state)
+      || !this.isGrounded()
+    ) return;
+    if (this.resumeTimer) this.clearTimeoutFn(this.resumeTimer);
+    if (this.stateTimer) this.clearTimeoutFn(this.stateTimer);
+    if (this.interactionTimer) this.clearTimeoutFn(this.interactionTimer);
+    this.resumeTimer = this.stateTimer = this.interactionTimer = null;
+    this.targetX = null;
+    this.chooseDestination(true, true);
+  }
+
   startDrag() {
     this.dragging = true;
     this.fallVelocity = 0;
@@ -223,13 +293,14 @@ class AutonomousController {
     const win = this.getWindow();
     if (!win || win.isDestroyed()) return;
     const bounds = win.getBounds();
-    const floorY = this.floorY(bounds, this.getWorkArea(bounds));
+    const floorY = this.floorY(bounds, this.getGroundArea(bounds));
     if (floorY - bounds.y > this.groundSnapTolerance) {
       this.startFall();
       return;
     }
     win.setBounds({ ...bounds, y: floorY });
     this.setState(STATES.IDLE);
+    if (!this.activityEnabled) return;
     this.scheduleActivity(2200);
     if (this.resumeTimer) this.clearTimeoutFn(this.resumeTimer);
     this.resumeTimer = this.setTimeoutFn(() => {
@@ -240,7 +311,7 @@ class AutonomousController {
     }, 2200);
   }
 
-  floorY(bounds, area = this.getWorkArea(bounds)) {
+  floorY(bounds, area = this.getGroundArea(bounds)) {
     return Math.max(area.y, area.y + area.height - bounds.height - this.groundMargin);
   }
 
@@ -266,7 +337,7 @@ class AutonomousController {
 
   advanceFall(win, elapsedMs) {
     const bounds = win.getBounds();
-    const floorY = this.floorY(bounds, this.getWorkArea(bounds));
+    const floorY = this.floorY(bounds, this.getGroundArea(bounds));
     const dt = Math.min(0.1, Math.max(0, elapsedMs / 1000));
     this.fallVelocity = Math.min(this.maxFallSpeed, this.fallVelocity + this.gravity * dt);
     const nextY = bounds.y + this.fallVelocity * dt;

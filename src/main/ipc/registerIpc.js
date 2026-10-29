@@ -10,13 +10,16 @@ const { AutonomousController } = require('../autonomousController');
  * Registra os "ouvintes" IPC. Regra de segurança: só aceitamos mensagens vindas da NOSSA janela
  * e nenhuma mensagem carrega coordenadas ou comandos arbitrários.
  */
-function registerIpc({ getWindow, buildContextMenu }) {
+function registerIpc({ getWindow, buildContextMenu, preferences }) {
   let dragTimer = null;
   const behavior = new AutonomousController({
     getWindow,
     getWorkArea: (bounds) => screen.getDisplayMatching(bounds).workArea,
+    getGroundArea: (bounds) => screen.getDisplayMatching(bounds).bounds,
     groundMargin: config.window.groundMargin,
     ...config.physics,
+    activityEnabled: preferences.autonomousMovement,
+    activityMode: preferences.activityMode,
     onState: (value) => {
       const win = getWindow();
       if (win && !win.isDestroyed()) win.webContents.send(channels.AUTONOMOUS_STATE, value);
@@ -82,7 +85,15 @@ function registerIpc({ getWindow, buildContextMenu }) {
     behavior.interact();
   });
 
-  return { dispose: () => { stopDrag(); behavior.stop(); } };
+  return {
+    dispose: () => { stopDrag(); behavior.stop(); },
+    interact: () => behavior.interact(),
+    play: () => behavior.play(),
+    updatePreferences: (next) => {
+      behavior.setActivityEnabled(next.autonomousMovement);
+      behavior.setActivityMode(next.activityMode);
+    },
+  };
 }
 
 module.exports = { registerIpc };

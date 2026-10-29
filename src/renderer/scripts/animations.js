@@ -12,7 +12,7 @@ const directionalAnimation = (id, framesByDirection, fps, loop, priority, interr
 
 export const ANIMATIONS = Object.freeze({
   IDLE: animation('idle', [SPRITES.idle], 1, true, 1, true),
-  WALKING: directionalAnimation('walking', SPRITES.walking, 6, true, 2, true),
+  WALKING: directionalAnimation('walking', SPRITES.walking, 8, true, 2, true),
   RUNNING: directionalAnimation('running', SPRITES.running, 9, true, 2, true),
   HAPPY: animation('happy', [SPRITES.happy], 1, true, 3, true),
   INTERACTING: animation('interacting', [SPRITES.happy], 1, true, 3, true),

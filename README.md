@@ -14,6 +14,7 @@ Electron 45 · Node.js 22.12+ · HTML/CSS/JavaScript (módulos ES). Sem IA, banc
 npm install
 npm start
 npm test        # testes unitários (node:test)
+npm run test:smoke # inicia o app e valida renderer/IPC no macOS
 ```
 
 ## Como usar
@@ -21,6 +22,8 @@ npm test        # testes unitários (node:test)
 - Clique nele: ele fica feliz e fala algo.
 - Botão direito (ou ctrl+clique): menu para esconder, trocar de pose (teste) ou sair.
 - Ícone na barra de menus: clique mostra/esconde; botão direito abre o menu.
+- Menu de contexto: fazer carinho ou brincar com o Chico.
+- Preferências: pausar movimento autônomo, escolher ritmo e iniciar com o macOS.
 
 ## Estrutura
 ```
@@ -47,13 +50,28 @@ python3 tools/build_normalized_sprites.py
 O gerador conserva as fontes, remove os fundos, alinha os pés ao chão quando a pose está em pé e escreve frames
 RGBA em um canvas fixo de 640×512. Ele também usa uma paleta compartilhada para que caminhada, queda e repouso
 tenham as mesmas cores. O tamanho na tela é controlado por `SPRITE_SCALE` em `src/renderer/scripts/config.js`.
+As preferências ficam em `preferences.json` dentro do diretório de dados do Electron. O gerador deve ser
+reexecutado sempre que seus parâmetros ou as folhas-fonte mudarem.
+
+## Testes e distribuição
+`npm test` executa os testes de lógica, persistência de preferências, alinhamento visual dos quadros e
+reprodutibilidade do gerador. `npm run test:smoke` é um teste rápido de inicialização e IPC que só pode ser
+executado no macOS; ele usa um diretório temporário e não altera as preferências reais.
+
+O GitHub Actions roda a suíte em Linux e macOS. Para gerar os pacotes localmente, use `npm run dist:mac`.
+Ao enviar uma tag `v*`, o workflow de release cria artefatos DMG e ZIP para Apple Silicon e Intel e publica
+uma release no GitHub. Sem os secrets de certificado/notarização configurados, os pacotes são não assinados;
+configure `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PASSWORD`, `APPLE_ID`,
+`APPLE_APP_SPECIFIC_PASSWORD` e `APPLE_TEAM_ID` no repositório para assinatura e notarização.
+O comando de distribuição também recria o ícone `.icns` do app a partir do sprite normalizado.
 
 ## Segurança
 `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, CSP restritiva, preload com 5 funções,
 IPC validado (origem e tipo), navegação e janelas novas bloqueadas.
 
 ## Limitações conhecidas
-- Testado em Linux (Xvfb) com mouse real; ainda não validado em macOS.
+- O smoke test confirma carregamento e IPC no macOS, mas não substitui a validação manual do clique-through,
+  tray, múltiplos monitores e Spaces em máquinas reais.
 - Pode não aparecer sobre apps em tela cheia do macOS.
 - A área de clique do Chico é o retângulo da imagem (não o contorno exato).
 - Mensagens ainda são locais; sem IA.
@@ -62,8 +80,8 @@ IPC validado (origem e tipo), navegação e janelas novas bloqueadas.
 Janela transparente sem moldura, sempre no topo, arrastar, clicar, balão de fala, estados comportamentais,
 movimento autônomo gradual pela área útil do monitor, pausas, sono, curiosidade, corrida curta, reação a cliques,
 ocultar/mostrar, tray e reposicionamento ao mudar de monitor. O processo principal é o único controlador da posição;
-enquanto o mascote é arrastado, o movimento autônomo fica suspenso e retoma após uma pausa. A janela inicia no chão
-virtual, calculado pela área útil do monitor e por `groundMargin`; ao soltar no ar, cai com gravidade limitada, aterrissa
+enquanto o mascote é arrastado, o movimento autônomo fica suspenso e retoma após uma pausa. O Chico fica apoiado na
+borda inferior física do monitor, mesmo quando a Dock reduz a área útil; ao soltar no ar, cai com gravidade limitada, aterrissa
 e passa por recuperação. Arrastar durante a queda cancela a física. Caminhada e atividades de repouso são restritas ao chão.
 
 ## Recursos gráficos e limitações
@@ -72,12 +90,12 @@ As poses utilizadas pelo app são geradas em `assets/sprites/normalized/`. Cada 
 as patas e limpa a borda neutra deixada pelas folhas-fonte. Isso impede flashes de tamanho, manchas de fundo e trocas
 de tom quando uma animação avança.
 
-O catálogo usa quatro poses de caminhada, quatro de corrida, cinco de queda, aterrissagem, recuperação e poses de
+O catálogo usa quatro poses alternadas de caminhada, cinco de corrida, cinco de queda, aterrissagem, recuperação e poses de
 repouso. As sequências esquerda e direita são arquivos físicos distintos, gerados por espelhamento controlado da
 mesma pose fonte; o renderer não aplica uma inversão CSS global.
 
-Ainda não há interface de conversa nem ação de clique duplo implementada. A janela foi verificada por análise e testes
-automatizados de lógica; este ambiente não valida visualmente a janela transparente no macOS.
+Ainda não há interface de conversa nem ação de clique duplo implementada. A janela transparente não tem teste visual
+automatizado; a CI valida o carregamento do renderer e a interação IPC no macOS.
 
 ### Queda e catálogo de animações
 `src/renderer/scripts/animations.js` cataloga estados, quadros, velocidade, repetição, prioridade e variações;

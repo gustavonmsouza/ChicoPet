@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { AutonomousController, STATES } = require('../src/main/autonomousController');
 
-function rig({ x = -40, y, area = { x: -100, y: 0, width: 500, height: 400 }, random = () => 0.99, groundMargin = 8 } = {}) {
+function rig({ x = -40, y, area = { x: -100, y: 0, width: 500, height: 400 }, displayArea = area, random = () => 0.99, groundMargin = 0 } = {}) {
   let now = 1000;
   let intervalCallback;
   const timeouts = new Map();
@@ -19,6 +19,7 @@ function rig({ x = -40, y, area = { x: -100, y: 0, width: 500, height: 400 }, ra
   const controller = new AutonomousController({
     getWindow: () => win,
     getWorkArea: () => area,
+    getGroundArea: () => displayArea,
     groundMargin,
     random,
     now: () => now,
@@ -43,6 +44,14 @@ test('destination selection respects a work area with negative monitor coordinat
   assert.ok(r.controller.targetX >= -100);
   assert.ok(r.controller.targetX <= 300); // area right - window width
   assert.equal(r.controller.state, STATES.RUNNING);
+});
+
+test('ground position uses the physical display edge below the Dock work area', () => {
+  const r = rig({
+    area: { x: 0, y: 24, width: 1000, height: 700 },
+    displayArea: { x: 0, y: 0, width: 1000, height: 800 },
+  });
+  assert.equal(r.controller.floorY(r.bounds), 700);
 });
 
 test('movement advances gradually, stops at destination and returns to IDLE', () => {
@@ -133,7 +142,7 @@ test('release above ground falls with time-based gravity, lands and recovers', (
   r.controller.startDrag();
   r.controller.endDrag();
   assert.equal(r.controller.state, STATES.FALLING);
-  const floor = 400 - 100 - 8;
+  const floor = 400 - 100;
   for (let i = 0; i < 20 && r.controller.state === STATES.FALLING; i++) r.tick(40);
   assert.equal(r.controller.state, STATES.LANDING);
   assert.equal(r.bounds.y, floor);
@@ -178,4 +187,64 @@ test('autonomous walking cannot start while the window is airborne', () => {
   r.controller.chooseDestination();
   assert.equal(r.controller.state, STATES.IDLE);
   assert.equal(r.controller.targetX, null);
+});
+
+test('disabling autonomous movement stops walking without disabling manual play', () => {
+  const r = rig();
+  r.controller.start();
+  r.controller.state = STATES.WALKING;
+  r.controller.targetX = 250;
+  r.controller.setActivityEnabled(false);
+  assert.equal(r.controller.state, STATES.IDLE);
+  assert.equal(r.controller.targetX, null);
+  r.controller.chooseDestination();
+  assert.equal(r.controller.targetX, null);
+  r.controller.play();
+  assert.equal(r.controller.state, STATES.RUNNING);
+  assert.notEqual(r.controller.targetX, null);
+});
+
+test('activity modes change the movement speed', () => {
+  const calm = rig({ x: 0 });
+  calm.controller.start();
+  calm.controller.setActivityMode('calm');
+  calm.controller.targetX = 250;
+  calm.controller.state = STATES.WALKING;
+  calm.tick(40);
+
+  const playful = rig({ x: 0 });
+  playful.controller.start();
+  playful.controller.setActivityMode('playful');
+  playful.controller.targetX = 250;
+  playful.controller.state = STATES.WALKING;
+  playful.tick(40);
+  assert.ok(playful.bounds.x - 0 > calm.bounds.x - 0);
+});
+
+test('disabling movement cancels a pending drag resume timer', () => {
+  const r = rig();
+  r.controller.start();
+  r.controller.endDrag();
+  const resumeTimer = r.controller.resumeTimer;
+  assert.ok(r.timeouts.has(resumeTimer));
+  r.controller.setActivityEnabled(false);
+  assert.equal(r.timeouts.has(resumeTimer), false);
+  assert.equal(r.controller.resumeTimer, null);
+});
+
+test('manual play cancels a pending drag resume and cannot interrupt recovery', () => {
+  const grounded = rig();
+  grounded.controller.start();
+  grounded.controller.endDrag();
+  const resumeTimer = grounded.controller.resumeTimer;
+  grounded.controller.play();
+  assert.equal(grounded.timeouts.has(resumeTimer), false);
+  assert.equal(grounded.controller.state, STATES.RUNNING);
+
+  const airborne = rig({ y: 30 });
+  airborne.controller.start();
+  airborne.controller.startDrag();
+  airborne.controller.endDrag();
+  airborne.controller.play();
+  assert.equal(airborne.controller.state, STATES.FALLING);
 });

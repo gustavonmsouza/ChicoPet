@@ -6,14 +6,15 @@ const config = require('../config');
 
 /** Cria a janela transparente e sem moldura onde o Chico vive. */
 function createMascotWindow() {
-  const { width, height, margin, groundMargin } = config.window;
-  const area = screen.getPrimaryDisplay().workArea; // área útil: descontando Dock e barra de menus
+  const { width, height, margin } = config.window;
+  const display = screen.getPrimaryDisplay();
+  const area = display.workArea;
 
   const win = new BrowserWindow({
     width,
     height,
     x: Math.max(area.x, area.x + area.width - width - margin),
-    y: Math.max(area.y, area.y + area.height - height - groundMargin),
+    y: Math.max(display.bounds.y, display.bounds.y + display.bounds.height - height),
     transparent: true,       // fundo transparente
     frame: false,            // sem barra de título nem bordas
     hasShadow: false,        // sem sombra retangular do macOS
@@ -53,9 +54,10 @@ function createMascotWindow() {
 function clampToDisplay(win) {
   if (!win || win.isDestroyed()) return;
   const bounds = win.getBounds();
-  const area = screen.getDisplayMatching(bounds).workArea;
+  const display = screen.getDisplayMatching(bounds);
+  const area = display.workArea;
   const maxX = Math.max(area.x, area.x + area.width - bounds.width);
-  const maxY = Math.max(area.y, area.y + area.height - bounds.height);
+  const maxY = Math.max(display.bounds.y, display.bounds.y + display.bounds.height - bounds.height);
   const x = Math.min(Math.max(bounds.x, area.x), maxX);
   const y = Math.min(Math.max(bounds.y, area.y), maxY);
   if (x !== bounds.x || y !== bounds.y) win.setBounds({ ...bounds, x, y });

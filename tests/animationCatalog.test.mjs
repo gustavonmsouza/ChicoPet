@@ -32,8 +32,30 @@ test('movement and fall animations select real left/right frame files', () => {
 });
 
 test('walking and running use several aligned poses', () => {
-  assert.ok(selectAnimation('WALKING', 1).frames.length >= 4);
-  assert.ok(selectAnimation('RUNNING', 1).frames.length >= 4);
+  assert.equal(selectAnimation('WALKING', 1).frames.length, 4);
+  assert.equal(selectAnimation('RUNNING', 1).frames.length, 5);
+});
+
+test('walking frames visibly move the paws', () => {
+  const frames = selectAnimation('WALKING', 1).frames;
+  const pawRegion = (frameUrl) => {
+    const { width, height, scanlines } = pngInfo(frameUrl);
+    const pixels = [];
+    for (let y = Math.floor(height * 0.82); y < height; y += 1) {
+      const row = y * (width * 4 + 1) + 1;
+      pixels.push(...scanlines.subarray(row, row + width * 4));
+    }
+    return pixels;
+  };
+  const first = pawRegion(frames[0]);
+  for (const frame of frames.slice(1)) {
+    const next = pawRegion(frame);
+    let changed = 0;
+    for (let index = 0; index < first.length; index += 4) {
+      if (first[index + 3] !== next[index + 3]) changed += 1;
+    }
+    assert.ok(changed > 100, `${frame} should visibly change paw silhouettes`);
+  }
 });
 
 function pngInfo(frameUrl) {

@@ -20,7 +20,7 @@ export const SPRITES = Object.freeze({
   sitting: url('sentado'),
   sleeping: url('dormindo'),
   walking: directional('caminhada', 4),
-  running: directional('corrida', 4),
+  running: directional('corrida', 5),
   falling: directional('queda', 5),
   landing: directional('aterrissagem', 1),
   recovering: directional('recuperacao', 2),

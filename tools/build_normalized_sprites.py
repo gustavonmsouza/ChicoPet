@@ -19,7 +19,7 @@ from slice_sprite_sheets import read_rgba, write_rgba
 
 CANVAS_WIDTH = 640
 CANVAS_HEIGHT = 512
-GROUND_Y = 504
+GROUND_Y = 512
 PALETTE_SIZE = 192
 
 # Bounds are deliberately stored separately from segmentation.  That makes a
@@ -39,6 +39,7 @@ POSE_BOUNDS = {
         8: (927, 302, 1206, 514),
         9: (1223, 302, 1501, 514),
         10: (636, 305, 908, 514),
+        11: (955, 538, 1245, 755),
         12: (19, 538, 306, 735),
         13: (645, 538, 947, 738),
         14: (345, 538, 610, 747),
@@ -74,16 +75,20 @@ def build_specs():
         {"name": "dormindo", "source": "chico3", "pose": 18, "anchor": "ground", "fit": "width", "size": 440},
     ]
 
-    # The source walking poses face left.  Write an actual right-facing copy
-    # and retain the source-facing left copy, instead of relying on a global
-    # CSS transform whose convention can conflict with another sheet.
-    for state, poses in (("caminhada", (7, 8, 9, 10)), ("corrida", (12, 13, 14, 7))):
-        for direction, mirror in (("esquerda", False), ("direita", True)):
-            for index, pose in enumerate(poses, 1):
+    # The four standing poses form the walking cycle. Pose 11 faces right in
+    # the source sheet, so account for its origin when writing both directions.
+    movement_poses = {
+        "caminhada": ((7, False), (10, False), (8, False), (9, False)),
+        "corrida": ((12, False), (14, False), (13, False), (11, True), (7, False)),
+    }
+    for state, poses in movement_poses.items():
+        for direction in ("esquerda", "direita"):
+            for index, (pose, faces_right) in enumerate(poses, 1):
                 specs.append({
                     "name": f"{state}-{direction}-{index:02d}",
                     "source": "chico2", "pose": pose, "anchor": "ground",
-                    "fit": "height", "size": 410, "mirror": mirror,
+                    "fit": "height", "size": 410,
+                    "mirror": (direction == "direita") != faces_right,
                 })
 
     # These are a tumble sequence.  Each direction is stored as a real file
@@ -278,7 +283,14 @@ def make_canvas(width, height, pixels, spec):
         scaled = mirror_horizontally(target_width, target_height, scaled)
     canvas = bytearray(CANVAS_WIDTH * CANVAS_HEIGHT * 4)
     left = (CANVAS_WIDTH - target_width) // 2
-    top = (CANVAS_HEIGHT - target_height) // 2 if spec["anchor"] == "center" else GROUND_Y - target_height
+    if spec["anchor"] == "center":
+        top = (CANVAS_HEIGHT - target_height) // 2
+    else:
+        visible_bottom = max(
+            y for y in range(target_height)
+            if any(scaled[(y * target_width + x) * 4 + 3] for x in range(target_width))
+        )
+        top = GROUND_Y - visible_bottom - 1
     for row in range(target_height):
         source = row * target_width * 4
         target = ((top + row) * CANVAS_WIDTH + left) * 4
@@ -353,6 +365,11 @@ def main():
     root = args.root.resolve()
     output = (root / args.output).resolve()
     output.mkdir(parents=True, exist_ok=True)
+    manifest_path = output / "manifest.json"
+    previous_files = set()
+    if manifest_path.exists():
+        previous_manifest = json.loads(manifest_path.read_text())
+        previous_files = {frame["file"] for frame in previous_manifest["frames"]}
 
     source_images = {}
     for source in POSE_BOUNDS:
@@ -370,6 +387,12 @@ def main():
         crop_width, crop_height, crop = trim_transparent(crop_width, crop_height, crop)
         frames[spec["name"]] = make_canvas(crop_width, crop_height, crop, spec)
 
+    current_files = {f"{name}.png" for name in frames}
+    for filename in previous_files - current_files:
+        if Path(filename).name != filename or Path(filename).suffix != ".png":
+            raise ValueError(f"Unsafe stale frame path in {manifest_path}: {filename}")
+        (output / filename).unlink(missing_ok=True)
+
     palette = palette_from_frames(frames, PALETTE_SIZE)
     for name, pixels in frames.items():
         apply_palette(pixels, palette)
@@ -380,7 +403,7 @@ def main():
         "palette": [list(color) for color in palette],
         "frames": [{**spec, "file": f"{spec['name']}.png"} for spec in specs],
     }
-    (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Wrote {len(frames)} normalized frames to {output}")
     print(f"Shared palette: {len(palette)} colors; canvas: {CANVAS_WIDTH}x{CANVAS_HEIGHT}")
 
