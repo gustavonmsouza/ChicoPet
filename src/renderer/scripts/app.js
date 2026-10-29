@@ -1,4 +1,6 @@
-import { SPRITE_SCALE, BUBBLE_MS, CLICK_MOVE_THRESHOLD } from './config.js';
+import {
+  SPRITE_SCALE, SPRITE_FRAME_WIDTH, SPRITE_FRAME_HEIGHT, BUBBLE_MS, CLICK_MOVE_THRESHOLD,
+} from './config.js';
 import { SPRITES } from './sprites.js';
 import { Character, STATES, STATE_SPRITE } from './character.js';
 import { selectAnimation } from './animations.js';
@@ -7,7 +9,6 @@ import { PHRASES, createPhrasePicker } from './personality.js';
 
 const chicoEl = document.getElementById('chico');
 const bubbleEl = document.getElementById('bubble');
-let currentRenderScale = SPRITE_SCALE;
 let currentDirection = 1;
 
 const pickClickPhrase = createPhrasePicker(PHRASES.click);
@@ -21,21 +22,21 @@ function showSprite(name) { if (SPRITES[name]) chicoEl.src = SPRITES[name]; }
 function playState(state) {
   const animation = selectAnimation(state, currentDirection);
   if (animation?.frames.length) {
-    currentRenderScale = animation.renderScale || SPRITE_SCALE;
     animationPlayer.play(animation);
   }
   else {
     animationPlayer.stop();
-    currentRenderScale = SPRITE_SCALE;
     showSprite(STATE_SPRITE[state] || 'idle');
   }
 }
 
 // Quando a imagem carrega, ajustamos o tamanho na tela e a altura em que o balão aparece.
 chicoEl.addEventListener('load', () => {
-  chicoEl.style.width = `${Math.round(chicoEl.naturalWidth * currentRenderScale)}px`;
-  chicoEl.style.height = `${Math.round(chicoEl.naturalHeight * currentRenderScale)}px`;
-  document.documentElement.style.setProperty('--sprite-h', `${chicoEl.offsetHeight}px`);
+  const width = Math.round(SPRITE_FRAME_WIDTH * SPRITE_SCALE);
+  const height = Math.round(SPRITE_FRAME_HEIGHT * SPRITE_SCALE);
+  chicoEl.style.width = `${width}px`;
+  chicoEl.style.height = `${height}px`;
+  document.documentElement.style.setProperty('--sprite-h', `${height}px`);
 });
 
 // Pré-carrega todos os sprites para a troca de pose não piscar.
@@ -133,10 +134,14 @@ window.chicoApi.onSetPose((pose) => {
 });
 
 window.chicoApi.onAutonomousState(({ state, direction }) => {
+  const directionChanged = direction !== currentDirection;
   currentDirection = direction;
-  chicoEl.classList.toggle('faces-left', currentDirection < 0);
   const next = STATES[state];
-  if (next) character.forceState(next);
+  if (!next) return;
+  // A direção pode mudar sem transição de estado (por exemplo, ao inverter
+  // uma caminhada). Reaplica a sequência correta de arquivos left/right.
+  if (directionChanged && next === character.state) playState(next);
+  else character.forceState(next);
 });
 
 playState(character.state);
