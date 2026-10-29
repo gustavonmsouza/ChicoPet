@@ -8,4 +8,6 @@ module.exports = Object.freeze({
   SET_INTERACTIVE: 'mascot:set-interactive',
   SHOW_MENU: 'mascot:show-menu',
   SET_POSE: 'mascot:set-pose', // principal -> renderer
+  INTERACT: 'mascot:interact',
+  AUTONOMOUS_STATE: 'mascot:autonomous-state', // principal -> renderer
 });

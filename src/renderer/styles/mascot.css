@@ -28,7 +28,9 @@ html, body {
   translate: -50% 0;
   cursor: grab;
   -webkit-user-drag: none;
+  image-rendering: pixelated;
 }
+.chico.faces-left { transform: scaleX(-1); }
 .chico.dragging { cursor: grabbing; }
 
 /* Balão de fala: bordas "em degrau" feitas com box-shadow, sombra dura em caramelo. */

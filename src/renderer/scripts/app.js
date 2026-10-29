@@ -1,4 +1,4 @@
-import { SPRITE_SCALE, BUBBLE_MS, HAPPY_MS, CLICK_MOVE_THRESHOLD } from './config.js';
+import { SPRITE_SCALE, BUBBLE_MS, CLICK_MOVE_THRESHOLD } from './config.js';
 import { SPRITES } from './sprites.js';
 import { Character, STATES, STATE_SPRITE } from './character.js';
 import { PHRASES, createPhrasePicker } from './personality.js';
@@ -10,7 +10,6 @@ const pickClickPhrase = createPhrasePicker(PHRASES.click);
 const pickWakePhrase = createPhrasePicker(PHRASES.wake);
 
 let bubbleTimer = null;
-let happyTimer = null;
 
 // ---------- Sprite ----------
 function showSprite(name) {
@@ -43,16 +42,14 @@ const character = new Character({
 });
 
 function onChicoClick() {
-  clearTimeout(happyTimer);
-  if (character.state === STATES.SLEEPING) {
-    character.transitionTo(STATES.IDLE);
+  const wasSleeping = character.state === STATES.SLEEPING;
+  window.chicoApi.interact();
+  character.forceState(STATES.HAPPY);
+  if (wasSleeping) {
     say(pickWakePhrase());
-    return;
+  } else {
+    say(pickClickPhrase());
   }
-  character.forceState(STATES.IDLE); // garante um ponto de partida limpo (ex.: se estava andando)
-  character.transitionTo(STATES.HAPPY);
-  say(pickClickPhrase());
-  happyTimer = setTimeout(() => character.transitionTo(STATES.IDLE), HAPPY_MS);
 }
 
 // ---------- Arrastar x clicar ----------
@@ -108,8 +105,13 @@ document.addEventListener('contextmenu', (event) => {
 // ---------- Poses de teste vindas do menu ----------
 const POSE_TO_STATE = { idle: STATES.IDLE, walk: STATES.WALKING, happy: STATES.HAPPY, sleep: STATES.SLEEPING };
 window.chicoApi.onSetPose((pose) => {
-  clearTimeout(happyTimer);
   if (pose in POSE_TO_STATE) character.forceState(POSE_TO_STATE[pose]);
+});
+
+window.chicoApi.onAutonomousState(({ state, direction }) => {
+  const next = STATES[state];
+  if (next) character.forceState(next);
+  chicoEl.classList.toggle('faces-left', direction < 0);
 });
 
 showSprite(STATE_SPRITE[character.state]);

@@ -4,6 +4,7 @@ const { ipcMain, screen } = require('electron');
 const channels = require('./channels');
 const config = require('../config');
 const { clampToDisplay } = require('../windows/mascotWindow');
+const { AutonomousController } = require('../autonomousController');
 
 /**
  * Registra os "ouvintes" IPC. Regra de segurança: só aceitamos mensagens vindas da NOSSA janela
@@ -11,6 +12,15 @@ const { clampToDisplay } = require('../windows/mascotWindow');
  */
 function registerIpc({ getWindow, buildContextMenu }) {
   let dragTimer = null;
+  const behavior = new AutonomousController({
+    getWindow,
+    getWorkArea: (bounds) => screen.getDisplayMatching(bounds).workArea,
+    onState: (value) => {
+      const win = getWindow();
+      if (win && !win.isDestroyed()) win.webContents.send(channels.AUTONOMOUS_STATE, value);
+    },
+  });
+  behavior.start();
 
   const isFromMascot = (event) => {
     const win = getWindow();
@@ -25,6 +35,7 @@ function registerIpc({ getWindow, buildContextMenu }) {
   ipcMain.on(channels.DRAG_START, (event) => {
     if (!isFromMascot(event)) return;
     const win = getWindow();
+    behavior.startDrag();
     stopDrag();
     const startCursor = screen.getCursorScreenPoint();
     const startBounds = win.getBounds();
@@ -46,6 +57,7 @@ function registerIpc({ getWindow, buildContextMenu }) {
     if (!isFromMascot(event)) return;
     stopDrag();
     clampToDisplay(getWindow());
+    behavior.endDrag();
   });
 
   ipcMain.on(channels.SET_INTERACTIVE, (event, interactive) => {
@@ -59,7 +71,12 @@ function registerIpc({ getWindow, buildContextMenu }) {
     buildContextMenu().popup({ window: getWindow() });
   });
 
-  return { dispose: stopDrag };
+  ipcMain.on(channels.INTERACT, (event) => {
+    if (!isFromMascot(event)) return;
+    behavior.interact();
+  });
+
+  return { dispose: () => { stopDrag(); behavior.stop(); } };
 }
 
 module.exports = { registerIpc };

@@ -2,23 +2,32 @@
 export const STATES = Object.freeze({
   IDLE: 'IDLE',
   WALKING: 'WALKING',
+  RUNNING: 'RUNNING',
   HAPPY: 'HAPPY',
   SLEEPING: 'SLEEPING',
+  CURIOUS: 'CURIOUS',
+  INTERACTING: 'INTERACTING',
 });
 
 // Para cada estado, para quais outros ele pode ir.
 const TRANSITIONS = Object.freeze({
-  IDLE: ['WALKING', 'HAPPY', 'SLEEPING'],
-  WALKING: ['IDLE', 'HAPPY'],
-  HAPPY: ['IDLE'],
-  SLEEPING: ['IDLE'], // dormindo, só acorda (vai para IDLE) — nada de pular direto para HAPPY
+  IDLE: ['WALKING', 'RUNNING', 'HAPPY', 'SLEEPING', 'CURIOUS', 'INTERACTING'],
+  WALKING: ['IDLE', 'RUNNING', 'HAPPY', 'CURIOUS', 'INTERACTING'],
+  RUNNING: ['IDLE', 'WALKING', 'HAPPY', 'INTERACTING'],
+  HAPPY: ['IDLE', 'INTERACTING'],
+  SLEEPING: ['IDLE', 'HAPPY', 'INTERACTING'],
+  CURIOUS: ['IDLE', 'WALKING', 'INTERACTING'],
+  INTERACTING: ['IDLE', 'HAPPY'],
 });
 
 export const STATE_SPRITE = Object.freeze({
   IDLE: 'idle',
   WALKING: 'walk',
+  RUNNING: 'walk',
   HAPPY: 'happy',
   SLEEPING: 'sleep',
+  CURIOUS: 'idle',
+  INTERACTING: 'happy',
 });
 
 export class Character {

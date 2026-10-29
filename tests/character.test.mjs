@@ -12,11 +12,19 @@ test('IDLE pode ir para HAPPY e HAPPY volta para IDLE', () => {
   assert.equal(chico.transitionTo(STATES.IDLE), true);
 });
 
-test('dormindo não pula direto para HAPPY', () => {
+test('clique pode acordar o Chico diretamente para HAPPY', () => {
   const chico = new Character();
   chico.transitionTo(STATES.SLEEPING);
-  assert.equal(chico.transitionTo(STATES.HAPPY), false);
-  assert.equal(chico.state, STATES.SLEEPING);
+  assert.equal(chico.transitionTo(STATES.HAPPY), true);
+  assert.equal(chico.state, STATES.HAPPY);
+});
+
+test('máquina conhece corrida, curiosidade e interação', () => {
+  const chico = new Character();
+  assert.equal(chico.transitionTo(STATES.CURIOUS), true);
+  assert.equal(chico.transitionTo(STATES.WALKING), true);
+  assert.equal(chico.transitionTo(STATES.RUNNING), true);
+  assert.equal(chico.transitionTo(STATES.INTERACTING), true);
 });
 
 test('onChange só dispara quando o estado muda de verdade', () => {
