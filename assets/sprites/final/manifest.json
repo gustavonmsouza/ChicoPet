@@ -1,0 +1,1126 @@
+{
+  "canvas": {
+    "width": 640,
+    "height": 512,
+    "groundY": 504
+  },
+  "palette": [
+    [
+      10,
+      5,
+      6
+    ],
+    [
+      12,
+      13,
+      20
+    ],
+    [
+      15,
+      12,
+      12
+    ],
+    [
+      20,
+      18,
+      20
+    ],
+    [
+      20,
+      20,
+      28
+    ],
+    [
+      28,
+      20,
+      28
+    ],
+    [
+      31,
+      10,
+      6
+    ],
+    [
+      31,
+      21,
+      18
+    ],
+    [
+      31,
+      28,
+      28
+    ],
+    [
+      33,
+      28,
+      36
+    ],
+    [
+      36,
+      36,
+      36
+    ],
+    [
+      42,
+      35,
+      38
+    ],
+    [
+      44,
+      36,
+      44
+    ],
+    [
+      47,
+      15,
+      8
+    ],
+    [
+      48,
+      26,
+      19
+    ],
+    [
+      50,
+      44,
+      43
+    ],
+    [
+      51,
+      46,
+      52
+    ],
+    [
+      52,
+      36,
+      40
+    ],
+    [
+      59,
+      22,
+      12
+    ],
+    [
+      60,
+      34,
+      22
+    ],
+    [
+      60,
+      36,
+      36
+    ],
+    [
+      60,
+      52,
+      51
+    ],
+    [
+      60,
+      52,
+      60
+    ],
+    [
+      62,
+      44,
+      44
+    ],
+    [
+      68,
+      52,
+      50
+    ],
+    [
+      69,
+      60,
+      59
+    ],
+    [
+      74,
+      19,
+      7
+    ],
+    [
+      74,
+      33,
+      19
+    ],
+    [
+      74,
+      50,
+      48
+    ],
+    [
+      76,
+      60,
+      60
+    ],
+    [
+      78,
+      55,
+      48
+    ],
+    [
+      82,
+      64,
+      59
+    ],
+    [
+      82,
+      68,
+      68
+    ],
+    [
+      86,
+      31,
+      13
+    ],
+    [
+      87,
+      42,
+      20
+    ],
+    [
+      88,
+      73,
+      70
+    ],
+    [
+      96,
+      76,
+      72
+    ],
+    [
+      99,
+      53,
+      39
+    ],
+    [
+      100,
+      33,
+      12
+    ],
+    [
+      100,
+      43,
+      20
+    ],
+    [
+      101,
+      71,
+      59
+    ],
+    [
+      103,
+      80,
+      73
+    ],
+    [
+      104,
+      67,
+      48
+    ],
+    [
+      107,
+      87,
+      81
+    ],
+    [
+      111,
+      53,
+      24
+    ],
+    [
+      113,
+      42,
+      13
+    ],
+    [
+      114,
+      60,
+      39
+    ],
+    [
+      114,
+      83,
+      72
+    ],
+    [
+      116,
+      95,
+      88
+    ],
+    [
+      122,
+      54,
+      21
+    ],
+    [
+      123,
+      92,
+      78
+    ],
+    [
+      124,
+      44,
+      14
+    ],
+    [
+      124,
+      105,
+      98
+    ],
+    [
+      127,
+      99,
+      89
+    ],
+    [
+      128,
+      69,
+      43
+    ],
+    [
+      129,
+      55,
+      20
+    ],
+    [
+      130,
+      79,
+      51
+    ],
+    [
+      132,
+      62,
+      24
+    ],
+    [
+      144,
+      54,
+      12
+    ],
+    [
+      145,
+      60,
+      18
+    ],
+    [
+      145,
+      68,
+      30
+    ],
+    [
+      146,
+      62,
+      26
+    ],
+    [
+      146,
+      92,
+      74
+    ],
+    [
+      147,
+      108,
+      87
+    ],
+    [
+      149,
+      83,
+      50
+    ],
+    [
+      150,
+      62,
+      19
+    ],
+    [
+      151,
+      77,
+      38
+    ],
+    [
+      151,
+      120,
+      102
+    ],
+    [
+      155,
+      101,
+      73
+    ],
+    [
+      156,
+      68,
+      20
+    ],
+    [
+      157,
+      72,
+      25
+    ],
+    [
+      161,
+      95,
+      56
+    ],
+    [
+      164,
+      75,
+      26
+    ],
+    [
+      165,
+      84,
+      44
+    ],
+    [
+      166,
+      117,
+      81
+    ],
+    [
+      169,
+      75,
+      32
+    ],
+    [
+      170,
+      90,
+      43
+    ],
+    [
+      171,
+      80,
+      30
+    ],
+    [
+      172,
+      108,
+      73
+    ],
+    [
+      173,
+      72,
+      18
+    ],
+    [
+      175,
+      84,
+      30
+    ],
+    [
+      175,
+      128,
+      99
+    ],
+    [
+      179,
+      102,
+      56
+    ],
+    [
+      180,
+      92,
+      44
+    ],
+    [
+      185,
+      82,
+      28
+    ],
+    [
+      186,
+      100,
+      41
+    ],
+    [
+      187,
+      89,
+      30
+    ],
+    [
+      188,
+      84,
+      29
+    ],
+    [
+      188,
+      120,
+      76
+    ],
+    [
+      189,
+      103,
+      52
+    ],
+    [
+      191,
+      92,
+      32
+    ],
+    [
+      191,
+      146,
+      113
+    ],
+    [
+      194,
+      111,
+      54
+    ],
+    [
+      196,
+      100,
+      38
+    ],
+    [
+      203,
+      92,
+      30
+    ],
+    [
+      205,
+      126,
+      76
+    ],
+    [
+      207,
+      100,
+      34
+    ],
+    [
+      207,
+      122,
+      68
+    ],
+    [
+      208,
+      109,
+      38
+    ],
+    [
+      208,
+      132,
+      94
+    ],
+    [
+      209,
+      111,
+      48
+    ],
+    [
+      209,
+      120,
+      56
+    ],
+    [
+      219,
+      140,
+      79
+    ],
+    [
+      220,
+      132,
+      67
+    ],
+    [
+      221,
+      151,
+      99
+    ],
+    [
+      222,
+      122,
+      51
+    ],
+    [
+      223,
+      147,
+      79
+    ],
+    [
+      224,
+      111,
+      33
+    ],
+    [
+      224,
+      113,
+      101
+    ],
+    [
+      226,
+      117,
+      42
+    ],
+    [
+      231,
+      123,
+      50
+    ],
+    [
+      231,
+      132,
+      56
+    ],
+    [
+      233,
+      130,
+      62
+    ],
+    [
+      235,
+      130,
+      47
+    ],
+    [
+      235,
+      139,
+      69
+    ],
+    [
+      236,
+      138,
+      64
+    ],
+    [
+      236,
+      148,
+      72
+    ],
+    [
+      237,
+      138,
+      56
+    ],
+    [
+      237,
+      155,
+      90
+    ],
+    [
+      237,
+      178,
+      119
+    ],
+    [
+      238,
+      169,
+      99
+    ],
+    [
+      239,
+      189,
+      134
+    ],
+    [
+      240,
+      140,
+      73
+    ],
+    [
+      240,
+      151,
+      78
+    ],
+    [
+      243,
+      166,
+      87
+    ],
+    [
+      244,
+      149,
+      64
+    ],
+    [
+      244,
+      179,
+      106
+    ],
+    [
+      246,
+      142,
+      51
+    ],
+    [
+      246,
+      155,
+      88
+    ],
+    [
+      248,
+      172,
+      88
+    ],
+    [
+      249,
+      156,
+      68
+    ],
+    [
+      249,
+      211,
+      145
+    ],
+    [
+      250,
+      161,
+      76
+    ],
+    [
+      250,
+      217,
+      157
+    ],
+    [
+      252,
+      140,
+      60
+    ],
+    [
+      252,
+      168,
+      85
+    ],
+    [
+      252,
+      174,
+      89
+    ],
+    [
+      252,
+      179,
+      99
+    ],
+    [
+      252,
+      188,
+      118
+    ],
+    [
+      252,
+      189,
+      103
+    ],
+    [
+      252,
+      196,
+      113
+    ],
+    [
+      252,
+      199,
+      120
+    ],
+    [
+      252,
+      204,
+      132
+    ],
+    [
+      252,
+      206,
+      123
+    ],
+    [
+      252,
+      210,
+      139
+    ],
+    [
+      252,
+      212,
+      132
+    ],
+    [
+      252,
+      222,
+      147
+    ],
+    [
+      252,
+      228,
+      169
+    ]
+  ],
+  "frames": [
+    {
+      "name": "idle",
+      "source": "chico1",
+      "pose": 1,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "file": "idle.png"
+    },
+    {
+      "name": "dragging",
+      "source": "chico1",
+      "pose": 1,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "file": "dragging.png"
+    },
+    {
+      "name": "curious",
+      "source": "chico1",
+      "pose": 2,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "curious.png"
+    },
+    {
+      "name": "happy",
+      "source": "chico3",
+      "pose": 13,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 400,
+      "file": "happy.png"
+    },
+    {
+      "name": "sitting",
+      "source": "chico3",
+      "pose": 13,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 400,
+      "file": "sitting.png"
+    },
+    {
+      "name": "sleeping",
+      "source": "chico3",
+      "pose": 18,
+      "anchor": "ground",
+      "fit": "width",
+      "size": 440,
+      "file": "sleeping.png"
+    },
+    {
+      "name": "walk-left-01",
+      "source": "chico2",
+      "pose": 7,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "walk-left-01.png"
+    },
+    {
+      "name": "walk-left-02",
+      "source": "chico2",
+      "pose": 8,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "walk-left-02.png"
+    },
+    {
+      "name": "walk-left-03",
+      "source": "chico2",
+      "pose": 9,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "walk-left-03.png"
+    },
+    {
+      "name": "walk-left-04",
+      "source": "chico2",
+      "pose": 10,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "walk-left-04.png"
+    },
+    {
+      "name": "walk-right-01",
+      "source": "chico2",
+      "pose": 7,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "walk-right-01.png"
+    },
+    {
+      "name": "walk-right-02",
+      "source": "chico2",
+      "pose": 8,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "walk-right-02.png"
+    },
+    {
+      "name": "walk-right-03",
+      "source": "chico2",
+      "pose": 9,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "walk-right-03.png"
+    },
+    {
+      "name": "walk-right-04",
+      "source": "chico2",
+      "pose": 10,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "walk-right-04.png"
+    },
+    {
+      "name": "run-left-01",
+      "source": "chico2",
+      "pose": 12,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "run-left-01.png"
+    },
+    {
+      "name": "run-left-02",
+      "source": "chico2",
+      "pose": 13,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "run-left-02.png"
+    },
+    {
+      "name": "run-left-03",
+      "source": "chico2",
+      "pose": 14,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "run-left-03.png"
+    },
+    {
+      "name": "run-left-04",
+      "source": "chico2",
+      "pose": 7,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": false,
+      "file": "run-left-04.png"
+    },
+    {
+      "name": "run-right-01",
+      "source": "chico2",
+      "pose": 12,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "run-right-01.png"
+    },
+    {
+      "name": "run-right-02",
+      "source": "chico2",
+      "pose": 13,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "run-right-02.png"
+    },
+    {
+      "name": "run-right-03",
+      "source": "chico2",
+      "pose": 14,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "run-right-03.png"
+    },
+    {
+      "name": "run-right-04",
+      "source": "chico2",
+      "pose": 7,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 410,
+      "mirror": true,
+      "file": "run-right-04.png"
+    },
+    {
+      "name": "fall-right-01",
+      "source": "chico3",
+      "pose": 1,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": false,
+      "file": "fall-right-01.png"
+    },
+    {
+      "name": "fall-right-02",
+      "source": "chico3",
+      "pose": 2,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": false,
+      "file": "fall-right-02.png"
+    },
+    {
+      "name": "fall-right-03",
+      "source": "chico3",
+      "pose": 3,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": false,
+      "file": "fall-right-03.png"
+    },
+    {
+      "name": "fall-right-04",
+      "source": "chico3",
+      "pose": 4,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": false,
+      "file": "fall-right-04.png"
+    },
+    {
+      "name": "fall-right-05",
+      "source": "chico3",
+      "pose": 5,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": false,
+      "file": "fall-right-05.png"
+    },
+    {
+      "name": "landing-right-01",
+      "source": "chico3",
+      "pose": 6,
+      "anchor": "ground",
+      "fit": "extent",
+      "size": 420,
+      "mirror": false,
+      "file": "landing-right-01.png"
+    },
+    {
+      "name": "recovery-right-01",
+      "source": "chico3",
+      "pose": 14,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 390,
+      "mirror": false,
+      "file": "recovery-right-01.png"
+    },
+    {
+      "name": "recovery-right-02",
+      "source": "chico3",
+      "pose": 13,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 390,
+      "mirror": false,
+      "file": "recovery-right-02.png"
+    },
+    {
+      "name": "fall-left-01",
+      "source": "chico3",
+      "pose": 1,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": true,
+      "file": "fall-left-01.png"
+    },
+    {
+      "name": "fall-left-02",
+      "source": "chico3",
+      "pose": 2,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": true,
+      "file": "fall-left-02.png"
+    },
+    {
+      "name": "fall-left-03",
+      "source": "chico3",
+      "pose": 3,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": true,
+      "file": "fall-left-03.png"
+    },
+    {
+      "name": "fall-left-04",
+      "source": "chico3",
+      "pose": 4,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": true,
+      "file": "fall-left-04.png"
+    },
+    {
+      "name": "fall-left-05",
+      "source": "chico3",
+      "pose": 5,
+      "anchor": "center",
+      "fit": "extent",
+      "size": 420,
+      "mirror": true,
+      "file": "fall-left-05.png"
+    },
+    {
+      "name": "landing-left-01",
+      "source": "chico3",
+      "pose": 6,
+      "anchor": "ground",
+      "fit": "extent",
+      "size": 420,
+      "mirror": true,
+      "file": "landing-left-01.png"
+    },
+    {
+      "name": "recovery-left-01",
+      "source": "chico3",
+      "pose": 14,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 390,
+      "mirror": true,
+      "file": "recovery-left-01.png"
+    },
+    {
+      "name": "recovery-left-02",
+      "source": "chico3",
+      "pose": 13,
+      "anchor": "ground",
+      "fit": "height",
+      "size": 390,
+      "mirror": true,
+      "file": "recovery-left-02.png"
+    }
+  ]
+}
