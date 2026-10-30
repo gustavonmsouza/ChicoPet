@@ -1,7 +1,7 @@
 'use strict';
 
-const path = require('node:path');
 const { BrowserWindow, screen } = require('electron');
+const { sourcePath } = require('../appPaths');
 const config = require('../config');
 
 /** Cria a janela transparente e sem moldura onde o Chico vive. */
@@ -26,7 +26,7 @@ function createMascotWindow() {
     skipTaskbar: true,
     show: false,             // só mostra quando o conteúdo estiver pronto (evita piscar)
     webPreferences: {
-      preload: path.join(__dirname, '..', '..', 'preload', 'preload.js'),
+      preload: sourcePath('preload', 'preload.js'),
       contextIsolation: true,   // o renderer não enxerga o mundo do preload
       nodeIntegration: false,   // o renderer não tem require() nem acesso ao Node
       sandbox: true,            // processo do renderer com permissões reduzidas
@@ -46,7 +46,7 @@ function createMascotWindow() {
   win.webContents.on('will-navigate', (event) => event.preventDefault());
 
   win.once('ready-to-show', () => win.show());
-  win.loadFile(path.join(__dirname, '..', '..', 'renderer', 'index.html'));
+  win.loadFile(sourcePath('renderer', 'index.html'));
   return win;
 }
 

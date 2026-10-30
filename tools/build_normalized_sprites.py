@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Build the fixed-canvas, transparent runtime sprites for Chico.
 
-The original sheets remain untouched in ``assets/sprites/chico*.png``.  This
-tool crops the selected poses from known source bounds, removes their source
-backgrounds, aligns every runtime frame to one canvas and applies one shared
-palette.  It uses only Python's standard library.
+The original sheets remain untouched in ``assets/sprites/source/``. This tool
+crops selected poses, removes their source backgrounds, aligns every runtime
+frame to one canvas and applies one shared palette. It uses only Python's
+standard library.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+from array import array
 from collections import Counter, deque
 from pathlib import Path
 
@@ -21,7 +22,8 @@ CANVAS_WIDTH = 640
 CANVAS_HEIGHT = 512
 GROUND_Y = 512
 PALETTE_SIZE = 192
-SOURCE_FILES = {"chico_andando": "chico-andando.png"}
+REFERENCE_SOURCE = "reference"
+SOURCE_FILES = {REFERENCE_SOURCE: "reference.png"}
 
 # Bounds are deliberately stored separately from segmentation.  That makes a
 # cleanup threshold unable to change which source pose receives a filename.
@@ -35,16 +37,6 @@ POSE_BOUNDS = {
         6: (792, 401, 1124, 664),
         7: (1164, 401, 1495, 667),
     },
-    "chico2": {
-        7: (333, 296, 613, 514),
-        8: (927, 302, 1206, 514),
-        9: (1223, 302, 1501, 514),
-        10: (636, 305, 908, 514),
-        11: (955, 538, 1245, 755),
-        12: (19, 538, 306, 735),
-        13: (645, 538, 947, 738),
-        14: (345, 538, 610, 747),
-    },
     "chico3": {
         1: (18, 39, 273, 394),
         2: (283, 88, 527, 428),
@@ -57,59 +49,162 @@ POSE_BOUNDS = {
         15: (1120, 791, 1309, 1008),
         18: (594, 832, 836, 1005),
     },
-    "chico_andando": {
-        1: (26, 146, 247, 333),
-        2: (275, 151, 495, 333),
-        3: (512, 141, 743, 333),
-        4: (759, 148, 991, 333),
-        5: (1008, 141, 1239, 331),
-        6: (1239, 146, 1484, 333),
-        7: (1487, 149, 1728, 333),
-        8: (1735, 146, 1972, 333),
-        9: (14, 524, 247, 721),
-        10: (275, 529, 495, 721),
-        11: (521, 524, 743, 721),
-        12: (760, 524, 991, 720),
-        13: (996, 529, 1239, 721),
-        14: (1239, 524, 1473, 721),
-        15: (1487, 526, 1729, 721),
-        16: (1735, 526, 1967, 721),
-    },
+    REFERENCE_SOURCE: {},
 }
 
 
 def source_mode(name):
-    return {"chico1": "alpha", "chico2": "checker", "chico3": "white", "chico_andando": "white"}[name]
+    return {"chico1": "alpha", "chico3": "white"}[name]
+
+
+def _is_green_screen(r, g, b):
+    return g > 120 and g > r * 1.35 and g > b * 1.35
+
+
+def reference_components(width, height, pixels):
+    """Find the reference sheet's 29 separate dog poses, ignoring its green matte."""
+    total = width * height
+    labels = array("H", [0]) * total
+    components = []
+    next_label = 0
+    for index in range(total):
+        if labels[index]:
+            continue
+        offset = index * 4
+        if _is_green_screen(*pixels[offset:offset + 3]):
+            continue
+        next_label += 1
+        labels[index] = next_label
+        stack = [index]
+        points = []
+        x0 = x1 = index % width
+        y0 = y1 = index // width
+        while stack:
+            pixel = stack.pop()
+            points.append(pixel)
+            x, y = pixel % width, pixel // width
+            x0, x1 = min(x0, x), max(x1, x)
+            y0, y1 = min(y0, y), max(y1, y)
+            for dy in (-1, 0, 1):
+                ny = y + dy
+                if not 0 <= ny < height:
+                    continue
+                for dx in (-1, 0, 1):
+                    nx = x + dx
+                    if (dx == 0 and dy == 0) or not 0 <= nx < width:
+                        continue
+                    neighbor = ny * width + nx
+                    if labels[neighbor]:
+                        continue
+                    neighbor_offset = neighbor * 4
+                    if _is_green_screen(*pixels[neighbor_offset:neighbor_offset + 3]):
+                        continue
+                    labels[neighbor] = next_label
+                    stack.append(neighbor)
+        if len(points) > 1000:
+            components.append({
+                "label": next_label,
+                "points": points,
+                "bounds": (x0, y0, x1, y1),
+            })
+
+    rows = (
+        sorted((item for item in components if item["bounds"][1] < 220), key=lambda item: item["bounds"][0]),
+        sorted((item for item in components if 220 <= item["bounds"][1] < 435), key=lambda item: item["bounds"][0]),
+        sorted((item for item in components if item["bounds"][1] >= 435), key=lambda item: item["bounds"][0]),
+    )
+    expected = (8, 8, 13)
+    if tuple(map(len, rows)) != expected:
+        raise ValueError(f"Expected reference-sheet rows with {expected} poses, found {tuple(map(len, rows))}")
+    return labels, [component for row in rows for component in row]
+
+
+def _unmix_green(r, g, b):
+    foreground_green = max(r, b)
+    if g <= foreground_green:
+        return r, g, b, 255
+    green_screen = (g - foreground_green) / (255 - foreground_green)
+    alpha = 1 - green_screen
+    if alpha <= 0:
+        return 0, 0, 0, 0
+    return r, foreground_green, b, round(alpha * 255)
+
+
+def despill_green(r, g, b):
+    g = min(g, max(r, b))
+    if r < 190 and b < r * 0.45 and g > r * 0.68:
+        g = round(r * 0.56 + b * 0.32)
+    return r, g, b
+
+
+def copy_reference_component(width, source_pixels, labels, component, padding=2):
+    x0, y0, x1, y1 = component["bounds"]
+    left, top = max(0, x0 - padding), max(0, y0 - padding)
+    right, bottom = min(width, x1 + padding + 1), y1 + padding + 1
+    crop_width, crop_height = right - left, bottom - top
+    pixels = bytearray(crop_width * crop_height * 4)
+    label = component["label"]
+    for y in range(top, bottom):
+        for x in range(left, right):
+            source_index = y * width + x
+            pixel_label = labels[source_index]
+            if pixel_label and pixel_label != label:
+                continue
+            offset = source_index * 4
+            r, g, b = source_pixels[offset:offset + 3]
+            if pixel_label == label:
+                r, g, b = despill_green(r, g, b)
+                alpha = 255
+            else:
+                r, g, b, alpha = _unmix_green(r, g, b)
+                if alpha == 255:
+                    continue
+            if alpha == 0:
+                continue
+            target = ((y - top) * crop_width + x - left) * 4
+            pixels[target:target + 4] = bytes((r, g, b, alpha))
+    return crop_width, crop_height, pixels
 
 
 def build_specs():
     specs = [
+        *(
+            {
+                "name": f"parado-{index:02d}", "source": REFERENCE_SOURCE, "pose": 16 + index,
+                "anchor": "ground", "fit": "height", "size": 410,
+            }
+            for index in range(1, 7)
+        ),
         # Chico 1 is used only where its original alpha is useful.  Its edge
         # colors are normalized with the same palette as the other two sheets.
         {"name": "parado", "source": "chico1", "pose": 1, "anchor": "ground", "fit": "height", "size": 410},
         {"name": "arrastando", "source": "chico1", "pose": 1, "anchor": "ground", "fit": "height", "size": 410},
         {"name": "curioso", "source": "chico1", "pose": 2, "anchor": "ground", "fit": "height", "size": 410, "mirror": True},
         {"name": "feliz", "source": "chico3", "pose": 13, "anchor": "ground", "fit": "height", "size": 400},
-        {"name": "sentado", "source": "chico3", "pose": 13, "anchor": "ground", "fit": "height", "size": 400},
-        {"name": "dormindo", "source": "chico3", "pose": 18, "anchor": "ground", "fit": "width", "size": 440},
+        *(
+            {
+                "name": f"sentado-{index:02d}", "source": REFERENCE_SOURCE, "pose": 22 + index,
+                "anchor": "ground", "fit": "height", "size": 410,
+            }
+            for index in range(1, 5)
+        ),
+        *(
+            {
+                "name": f"dormindo-{index:02d}", "source": REFERENCE_SOURCE, "pose": 26 + index,
+                "anchor": "ground", "fit": "height", "size": 410,
+            }
+            for index in range(1, 4)
+        ),
     ]
 
-    corrida_poses = ((12, False), (14, False), (13, False), (11, True), (7, False))
-    movement_poses = (
-        ("caminhada", "chico_andando", {
-            "esquerda": tuple((pose, False) for pose in range(9, 17)),
-            "direita": tuple((pose, True) for pose in range(1, 9)),
-        }),
-        ("corrida", "chico2", {"esquerda": corrida_poses, "direita": corrida_poses}),
-    )
-    for state, source, poses_by_direction in movement_poses:
-        for direction, poses in poses_by_direction.items():
-            for index, (pose, faces_right) in enumerate(poses, 1):
+    for state, first_pose in (("caminhada", 1), ("corrida", 9)):
+        for direction in ("esquerda", "direita"):
+            for index in range(1, 9):
                 specs.append({
                     "name": f"{state}-{direction}-{index:02d}",
-                    "source": source, "pose": pose, "anchor": "ground",
+                    "source": REFERENCE_SOURCE, "pose": first_pose + index - 1, "anchor": "ground",
                     "fit": "height", "size": 410,
-                    "mirror": (direction == "direita") != faces_right,
+                    "mirror": direction == "esquerda",
                 })
 
     # These are a tumble sequence.  Each direction is stored as a real file
@@ -380,7 +475,7 @@ def apply_palette(pixels, palette):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--output", type=Path, default=Path("assets/sprites/normalized"))
     args = parser.parse_args()
     root = args.root.resolve()
@@ -395,17 +490,28 @@ def main():
     source_images = {}
     for source in POSE_BOUNDS:
         filename = SOURCE_FILES.get(source, f"{source}.png")
-        source_images[source] = read_rgba(root / "assets" / "sprites" / filename)
+        source_images[source] = read_rgba(
+            (root / "assets" / "sprites" / "source" / filename).resolve(),
+        )
+    reference_width, reference_height, reference_pixels = source_images[REFERENCE_SOURCE]
+    reference_labels, reference_poses = reference_components(
+        reference_width, reference_height, reference_pixels,
+    )
 
     frames = {}
     specs = build_specs()
     for spec in specs:
         source_width, source_height, source_pixels = source_images[spec["source"]]
-        crop_width, crop_height, crop = copy_crop(
-            source_width, source_pixels, POSE_BOUNDS[spec["source"]][spec["pose"]], spec.get("padding", 0),
-        )
-        remove_background(crop_width, crop_height, crop, source_mode(spec["source"]))
-        remove_edge_matte(crop_width, crop_height, crop)
+        if spec["source"] == REFERENCE_SOURCE:
+            crop_width, crop_height, crop = copy_reference_component(
+                source_width, source_pixels, reference_labels, reference_poses[spec["pose"] - 1],
+            )
+        else:
+            crop_width, crop_height, crop = copy_crop(
+                source_width, source_pixels, POSE_BOUNDS[spec["source"]][spec["pose"]], spec.get("padding", 0),
+            )
+            remove_background(crop_width, crop_height, crop, source_mode(spec["source"]))
+            remove_edge_matte(crop_width, crop_height, crop)
         crop_width, crop_height, crop = trim_transparent(crop_width, crop_height, crop)
         frames[spec["name"]] = make_canvas(crop_width, crop_height, crop, spec)
 

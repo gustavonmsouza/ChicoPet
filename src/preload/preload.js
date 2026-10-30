@@ -29,7 +29,10 @@ contextBridge.exposeInMainWorld('chicoApi', {
     if (typeof callback !== 'function') return;
     ipcRenderer.on(CH.AUTONOMOUS_STATE, (_event, value) => {
       if (!value || typeof value.state !== 'string' || ![-1, 1].includes(value.direction)) return;
-      callback({ state: value.state, direction: value.direction });
+      const movementSpeed = Number.isFinite(value.movementSpeed) && value.movementSpeed > 0
+        ? value.movementSpeed
+        : null;
+      callback({ state: value.state, direction: value.direction, movementSpeed });
     });
   },
 });

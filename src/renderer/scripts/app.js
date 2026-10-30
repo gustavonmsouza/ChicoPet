@@ -1,28 +1,44 @@
 import {
   SPRITE_SCALE, SPRITE_FRAME_WIDTH, SPRITE_FRAME_HEIGHT, BUBBLE_MS, CLICK_MOVE_THRESHOLD,
 } from './config.js';
-import { SPRITES } from './sprites.js';
+import { SPRITE_SHEET, SPRITE_SHEET_COLUMNS, SPRITE_SHEET_ROWS, SPRITES } from './sprites.js';
 import { Character, STATES, STATE_SPRITE } from './character.js';
 import { selectAnimation } from './animations.js';
 import { AnimationPlayer } from './animationPlayer.js';
 import { PHRASES, createPhrasePicker } from './personality.js';
+import { bindPointerInteractions } from './pointerInteractions.js';
+import { createSpeechBubble } from './speechBubble.js';
 
 const chicoEl = document.getElementById('chico');
 const bubbleEl = document.getElementById('bubble');
 let currentDirection = 1;
+let currentMovementSpeed = null;
+let manualWalkStep = false;
+
+const BASE_MOVEMENT_SPEED = Object.freeze({ WALKING: 105, RUNNING: 230 });
 
 const pickClickPhrase = createPhrasePicker(PHRASES.click);
 const pickWakePhrase = createPhrasePicker(PHRASES.wake);
-
-let bubbleTimer = null;
+const speechBubble = createSpeechBubble({ element: bubbleEl, duration: BUBBLE_MS });
 
 // ---------- Sprite ----------
-const animationPlayer = new AnimationPlayer({ onFrame: (src) => { chicoEl.src = src; } });
-function showSprite(name) { if (SPRITES[name]) chicoEl.src = SPRITES[name]; }
+function showFrame({ column, row }) {
+  chicoEl.style.backgroundPositionX = `${-column * SPRITE_FRAME_WIDTH * SPRITE_SCALE}px`;
+  chicoEl.style.backgroundPositionY = `${-row * SPRITE_FRAME_HEIGHT * SPRITE_SCALE}px`;
+}
+
+const animationPlayer = new AnimationPlayer({ onFrame: showFrame });
+function showSprite(name) {
+  const sprite = SPRITES[name];
+  if (Array.isArray(sprite)) showFrame(sprite[0]);
+  else if (sprite) showFrame(sprite);
+}
 function playState(state) {
+  manualWalkStep = false;
   const animation = selectAnimation(state, currentDirection);
   if (animation?.frames.length) {
-    animationPlayer.play(animation);
+    animationPlayer.setPaused(document.hidden);
+    animationPlayer.play({ ...animation, fps: playbackFps(state, animation.fps) });
   }
   else {
     animationPlayer.stop();
@@ -30,36 +46,20 @@ function playState(state) {
   }
 }
 
-// Quando a imagem carrega, ajustamos o tamanho na tela e a altura em que o balão aparece.
-chicoEl.addEventListener('load', () => {
-  const width = Math.round(SPRITE_FRAME_WIDTH * SPRITE_SCALE);
-  const height = Math.round(SPRITE_FRAME_HEIGHT * SPRITE_SCALE);
-  chicoEl.style.width = `${width}px`;
-  chicoEl.style.height = `${height}px`;
-  document.documentElement.style.setProperty('--sprite-h', `${height}px`);
-});
-
-// Pré-carrega todos os sprites para a troca de pose não piscar.
-for (const value of Object.values(SPRITES)) {
-  const sources = Array.isArray(value)
-    ? value.flat(Infinity)
-    : value && typeof value === 'object'
-      ? Object.values(value).flat(Infinity)
-      : [value];
-  for (const src of sources) {
-    if (typeof src === 'string') new Image().src = src;
-  }
+function playbackFps(state, baseFps) {
+  const baseSpeed = BASE_MOVEMENT_SPEED[state];
+  if (!baseSpeed || !currentMovementSpeed) return baseFps;
+  return baseFps * currentMovementSpeed / baseSpeed;
 }
 
-// ---------- Balão de fala ----------
-function say(text) {
-  clearTimeout(bubbleTimer);
-  bubbleEl.hidden = true;
-  void bubbleEl.offsetWidth; // força o navegador a reiniciar a animação do balão
-  bubbleEl.textContent = text;
-  bubbleEl.hidden = false;
-  bubbleTimer = setTimeout(() => { bubbleEl.hidden = true; }, BUBBLE_MS);
-}
+const spriteWidth = SPRITE_FRAME_WIDTH * SPRITE_SCALE;
+const spriteHeight = SPRITE_FRAME_HEIGHT * SPRITE_SCALE;
+chicoEl.style.width = `${spriteWidth}px`;
+chicoEl.style.height = `${spriteHeight}px`;
+chicoEl.style.backgroundImage = `url("${SPRITE_SHEET}")`;
+chicoEl.style.backgroundSize = `${SPRITE_SHEET_COLUMNS * SPRITE_FRAME_WIDTH * SPRITE_SCALE}px `
+  + `${SPRITE_SHEET_ROWS * SPRITE_FRAME_HEIGHT * SPRITE_SCALE}px`;
+document.documentElement.style.setProperty('--sprite-h', `${spriteHeight}px`);
 
 // ---------- Estado do personagem ----------
 const character = new Character({
@@ -70,84 +70,74 @@ function onChicoClick(previousState) {
   const wasSleeping = previousState === STATES.SLEEPING;
   window.chicoApi.interact();
   if (wasSleeping) {
-    say(pickWakePhrase());
+    speechBubble.say(pickWakePhrase());
   } else {
-    say(pickClickPhrase());
+    speechBubble.say(pickClickPhrase());
   }
 }
 
-// ---------- Arrastar x clicar ----------
-let press = null; // guarda onde o botão foi pressionado
-
-chicoEl.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || event.ctrlKey) return; // só botão esquerdo (ctrl+clique abre o menu)
-  chicoEl.setPointerCapture(event.pointerId);      // continuamos recebendo eventos mesmo fora da imagem
-  press = { x: event.screenX, y: event.screenY, moved: false, previousState: character.state };
-  chicoEl.classList.add('dragging');
-  window.chicoApi.dragStart();                        // o processo principal passa a mover a janela
-});
-
-chicoEl.addEventListener('pointermove', (event) => {
-  if (!press) return;
-  const distance = Math.hypot(event.screenX - press.x, event.screenY - press.y);
-  if (distance > CLICK_MOVE_THRESHOLD) press.moved = true;
-});
-
-function finishPress(isClick) {
-  if (!press) return;
-  const wasClick = isClick && !press.moved;
-  const previousState = press.previousState;
-  press = null;
-  chicoEl.classList.remove('dragging');
-  window.chicoApi.dragEnd();
-  if (wasClick) onChicoClick(previousState);
-}
-chicoEl.addEventListener('pointerup', () => finishPress(true));
-chicoEl.addEventListener('pointercancel', () => finishPress(false));
-chicoEl.addEventListener('lostpointercapture', () => finishPress(false));
-
-// ---------- Janela "furada": só o Chico recebe cliques ----------
-let interactive = false;
-function setInteractive(next) {
-  if (next === interactive) return;
-  interactive = next;
-  window.chicoApi.setInteractive(next);
-}
-
-document.addEventListener('mousemove', (event) => {
-  if (press) return; // durante o arrasto, continua interativo
-  const element = document.elementFromPoint(event.clientX, event.clientY);
-  setInteractive(Boolean(element && element.closest('[data-hit]')));
-});
-document.documentElement.addEventListener('mouseleave', () => { if (!press) setInteractive(false); });
-
-// ---------- Menu de contexto (botão direito) ----------
-document.addEventListener('contextmenu', (event) => {
-  event.preventDefault();
-  if (event.target.closest('[data-hit]')) window.chicoApi.showMenu();
+const disposePointerInteractions = bindPointerInteractions({
+  element: chicoEl,
+  character,
+  api: window.chicoApi,
+  clickMoveThreshold: CLICK_MOVE_THRESHOLD,
+  onClick: onChicoClick,
 });
 
 // ---------- Poses de teste vindas do menu ----------
-const POSE_TO_STATE = { idle: STATES.IDLE, walk: STATES.WALKING, happy: STATES.HAPPY, sleep: STATES.SLEEPING };
+const POSE_TO_STATE = {
+  idle: STATES.IDLE, walk: STATES.WALKING, sit: STATES.SITTING, happy: STATES.HAPPY, sleep: STATES.SLEEPING,
+};
 window.chicoApi.onSetPose((pose) => {
+  if (pose === 'walk-step') {
+    if (character.state !== STATES.WALKING) character.forceState(STATES.WALKING);
+    manualWalkStep = true;
+    animationPlayer.setPaused(true);
+    animationPlayer.step();
+    return;
+  }
+  if (pose === 'walk') {
+    manualWalkStep = false;
+    if (character.state === STATES.WALKING) {
+      animationPlayer.setPaused(document.hidden);
+      return;
+    }
+  }
   if (pose in POSE_TO_STATE) character.forceState(POSE_TO_STATE[pose]);
 });
 
-window.chicoApi.onAutonomousState(({ state, direction }) => {
+window.chicoApi.onAutonomousState(({ state, direction, movementSpeed }) => {
   const directionChanged = direction !== currentDirection;
   currentDirection = direction;
+  currentMovementSpeed = movementSpeed;
   const next = STATES[state];
   if (!next) return;
   // A direção pode mudar sem transição de estado (por exemplo, ao inverter
   // uma caminhada). Reaplica a sequência correta de arquivos left/right.
-  if (directionChanged && next === character.state) playState(next);
-  else character.forceState(next);
+  if (next === character.state) {
+    if (directionChanged) {
+      const stepping = manualWalkStep;
+      playState(next);
+      if (stepping && next === STATES.WALKING) {
+        manualWalkStep = true;
+        animationPlayer.setPaused(true);
+      }
+    } else {
+      const animation = selectAnimation(next, currentDirection);
+      if (animation?.frames.length) animationPlayer.setFps(playbackFps(next, animation.fps));
+    }
+    return;
+  }
+  character.forceState(next);
 });
 
 playState(character.state);
 document.documentElement.dataset.rendererReady = 'true';
-document.addEventListener('visibilitychange', () => animationPlayer.setPaused(document.hidden));
+document.addEventListener('visibilitychange', () => {
+  animationPlayer.setPaused(document.hidden || manualWalkStep);
+});
 window.addEventListener('pagehide', () => {
   animationPlayer.stop();
-  clearTimeout(bubbleTimer);
+  speechBubble.clear();
+  disposePointerInteractions();
 });

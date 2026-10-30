@@ -1,7 +1,7 @@
 import { SPRITES } from './sprites.js';
 
 const animation = (id, frames, fps, loop, priority, interruptible) =>
-  Object.freeze({ id, frames, fps, loop, priority, interruptible });
+  Object.freeze({ id, frames: Object.freeze(frames), fps, loop, priority, interruptible });
 
 const directionalAnimation = (id, framesByDirection, fps, loop, priority, interruptible) => Object.freeze({
   byDirection: Object.freeze({
@@ -11,14 +11,14 @@ const directionalAnimation = (id, framesByDirection, fps, loop, priority, interr
 });
 
 export const ANIMATIONS = Object.freeze({
-  IDLE: animation('idle', [SPRITES.idle], 1, true, 1, true),
+  IDLE: animation('idle', SPRITES.idle, 4, true, 1, true),
   WALKING: directionalAnimation('walking', SPRITES.walking, 8, true, 2, true),
   RUNNING: directionalAnimation('running', SPRITES.running, 9, true, 2, true),
   HAPPY: animation('happy', [SPRITES.happy], 1, true, 3, true),
   INTERACTING: animation('interacting', [SPRITES.happy], 1, true, 3, true),
-  SLEEPING: animation('sleeping', [SPRITES.sleeping], 1, true, 1, true),
+  SLEEPING: animation('sleeping', SPRITES.sleeping, 3, true, 1, true),
   CURIOUS: animation('curious', [SPRITES.curious], 1, true, 1, true),
-  SITTING: animation('sitting', [SPRITES.sitting], 1, true, 1, true),
+  SITTING: animation('sitting', SPRITES.sitting, 4, true, 1, true),
   DRAGGING: animation('dragging', [SPRITES.dragging], 1, true, 5, true),
   FALLING: directionalAnimation('falling', SPRITES.falling, 7, true, 6, false),
   LANDING: directionalAnimation('landing', SPRITES.landing, 1, false, 5, false),

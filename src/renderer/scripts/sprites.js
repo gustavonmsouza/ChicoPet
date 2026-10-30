@@ -1,27 +1,28 @@
-// Todos os arquivos de runtime têm o mesmo canvas (640×512), a mesma paleta
-// e um fundo RGBA transparente. Os arquivos direita/esquerda já são espelhados no
-// disco, o que evita uma convenção global de CSS inverter a pose errada.
-const url = (file) => new URL(`../../../assets/sprites/normalized/${file}.png`, import.meta.url).href;
+// Rows follow the ordering in tools/build_sprite_atlas.py. Frames are already
+// mirrored on disk so each direction maps to its own strip.
+export const SPRITE_SHEET = new URL('../../../assets/sprites/chico-spritesheet.png', import.meta.url).href;
+export const SPRITE_SHEET_COLUMNS = 8;
+export const SPRITE_SHEET_ROWS = 12;
 
-const sequence = (prefix, length) => Object.freeze(
-  Array.from({ length }, (_, index) => url(`${prefix}-${String(index + 1).padStart(2, '0')}`)),
+const frame = (column, row) => Object.freeze({ column, row });
+const sequence = (row, length, firstColumn = 0) => Object.freeze(
+  Array.from({ length }, (_, index) => frame(firstColumn + index, row)),
 );
-
-const directional = (prefix, length) => Object.freeze({
-  left: sequence(`${prefix}-esquerda`, length),
-  right: sequence(`${prefix}-direita`, length),
+const directional = (leftRow, rightRow, length) => Object.freeze({
+  left: sequence(leftRow, length),
+  right: sequence(rightRow, length),
 });
 
 export const SPRITES = Object.freeze({
-  idle: url('parado'),
-  dragging: url('arrastando'),
-  curious: url('curioso'),
-  happy: url('feliz'),
-  sitting: url('sentado'),
-  sleeping: url('dormindo'),
-  walking: directional('caminhada', 8),
-  running: directional('corrida', 5),
-  falling: directional('queda', 5),
-  landing: directional('aterrissagem', 1),
-  recovering: directional('recuperacao', 2),
+  idle: sequence(0, 6),
+  dragging: frame(6, 0),
+  curious: frame(7, 0),
+  happy: frame(0, 1),
+  sitting: sequence(1, 4, 1),
+  sleeping: sequence(1, 3, 5),
+  walking: directional(2, 3, 8),
+  running: directional(4, 5, 8),
+  falling: directional(6, 7, 5),
+  landing: directional(8, 9, 1),
+  recovering: directional(10, 11, 2),
 });

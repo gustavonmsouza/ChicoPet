@@ -90,7 +90,15 @@ class AutonomousController {
     this.publish();
   }
 
-  publish() { this.onState({ state: this.state, direction: this.direction }); }
+  publish() {
+    const mode = ACTIVITY_MODES[this.activityMode];
+    const movementSpeed = this.state === STATES.WALKING
+      ? mode.walkSpeed
+      : this.state === STATES.RUNNING
+        ? mode.runSpeed
+        : null;
+    this.onState({ state: this.state, direction: this.direction, movementSpeed });
+  }
 
   scheduleActivity(delay) { this.nextActivityAt = this.now() + delay; }
 
@@ -126,6 +134,7 @@ class AutonomousController {
       const current = ACTIVITY_MODES[mode];
       this.scheduleActivity(this.activityDelay(current.initialMin, current.initialMax));
     }
+    if ([STATES.WALKING, STATES.RUNNING].includes(this.state)) this.publish();
   }
 
   beginActivity() {

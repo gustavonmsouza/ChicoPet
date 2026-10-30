@@ -221,6 +221,23 @@ test('activity modes change the movement speed', () => {
   assert.ok(playful.bounds.x - 0 > calm.bounds.x - 0);
 });
 
+test('walking and running states publish their movement speed', () => {
+  const r = rig();
+  const states = [];
+  r.controller.onState = (value) => states.push(value);
+  r.controller.start();
+  r.controller.chooseDestination();
+  assert.equal(states.at(-1).state, STATES.WALKING);
+  assert.equal(states.at(-1).movementSpeed, 105);
+
+  r.controller.setActivityMode('calm');
+  assert.equal(states.at(-1).movementSpeed, 75);
+
+  r.controller.play();
+  assert.equal(states.at(-1).state, STATES.RUNNING);
+  assert.equal(states.at(-1).movementSpeed, 165);
+});
+
 test('disabling movement cancels a pending drag resume timer', () => {
   const r = rig();
   r.controller.start();

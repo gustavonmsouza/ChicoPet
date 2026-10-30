@@ -15,9 +15,8 @@ test('sprite generator reproduces the checked-in assets and manifest', (t) => {
   writeFileSync(join(output, 'manifest.json'), JSON.stringify({ frames: [{ file: 'obsolete.png' }] }));
   execFileSync('python3', [
     join(root, 'tools', 'build_normalized_sprites.py'),
-    '--root', root,
     '--output', output,
-  ], { stdio: 'pipe' });
+  ], { cwd: output, stdio: 'pipe' });
 
   const checkedIn = join(root, 'assets', 'sprites', 'normalized');
   const generatedFiles = readdirSync(output).sort();
@@ -31,11 +30,30 @@ test('sprite generator reproduces the checked-in assets and manifest', (t) => {
   }
 });
 
+test('sprite atlas generator reproduces the checked-in sheet', (t) => {
+  const root = process.cwd();
+  const outputDir = mkdtempSync(join(tmpdir(), 'chico-atlas-'));
+  const output = join(outputDir, 'chico-spritesheet.png');
+  t.after(() => rmSync(outputDir, { recursive: true, force: true }));
+  execFileSync('python3', [
+    join(root, 'tools', 'build_sprite_atlas.py'),
+    '--root', root,
+    '--output', output,
+  ], { stdio: 'pipe' });
+
+  const generated = readFileSync(output);
+  const checkedIn = readFileSync(join(root, 'assets', 'sprites', 'chico-spritesheet.png'));
+  assert.equal(createHash('sha256').update(generated).digest('hex'),
+    createHash('sha256').update(checkedIn).digest('hex'));
+  assert.equal(generated.readUInt32BE(16), 640 * 8);
+  assert.equal(generated.readUInt32BE(20), 512 * 12);
+});
+
 test('grounded sprite frames share a consistent bottom alignment', () => {
   const root = resolve('assets/sprites/normalized');
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
   assert.equal(manifest.frames.filter(({ name }) => name.startsWith('caminhada-')).length, 16);
-  assert.equal(manifest.frames.filter(({ name }) => name.startsWith('corrida-')).length, 10);
+  assert.equal(manifest.frames.filter(({ name }) => name.startsWith('corrida-')).length, 16);
   const grounded = manifest.frames.filter(({ anchor }) => anchor === 'ground');
   const groundRows = grounded.map(({ file }) => {
     const bytes = readFileSync(join(root, file));

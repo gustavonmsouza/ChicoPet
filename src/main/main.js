@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const { app, dialog, Menu, Tray, nativeImage, screen } = require('electron');
+const { assetPath } = require('./appPaths');
 const channels = require('./ipc/channels');
 const { registerIpc } = require('./ipc/registerIpc');
 const { createMascotWindow, clampToDisplay } = require('./windows/mascotWindow');
@@ -22,7 +23,8 @@ let preferencesPath = null;
 const POSES = [
   ['Em pé', 'idle'],
   ['Andando', 'walk'],
-  ['Sentado', 'happy'],
+  ['Andando: próximo quadro', 'walk-step'],
+  ['Sentado', 'sit'],
   ['Dormindo', 'sleep'],
 ];
 
@@ -94,7 +96,7 @@ function buildContextMenu() {
 }
 
 function createTray() {
-  const icon = nativeImage.createFromPath(path.join(__dirname, '..', '..', 'assets', 'icons', 'tray.png'));
+  const icon = nativeImage.createFromPath(assetPath('icons', 'tray.png'));
   tray = new Tray(icon);
   tray.setToolTip('Chico Desktop Companion');
   tray.on('click', toggleMascot);                                   // clique: mostra/esconde
@@ -122,51 +124,93 @@ function runSmokeTest() {
         check();
       })`);
       const initialState = await win.webContents.executeJavaScript(`new Promise((resolve, reject) => {
-        const image = document.getElementById('chico');
-        const timeout = setTimeout(() => reject(new Error('Mascot sprite did not load')), 5000);
+        const mascot = document.getElementById('chico');
+        const background = getComputedStyle(mascot).backgroundImage;
+        if (!background || background === 'none') return reject(new Error('Mascot atlas was not configured'));
+        const image = new Image();
+        const timeout = setTimeout(() => reject(new Error('Mascot atlas did not load')), 5000);
         const check = () => {
           clearTimeout(timeout);
-          if (!image.naturalWidth || !image.naturalHeight) return reject(new Error('Mascot sprite is empty'));
+          if (!image.naturalWidth || !image.naturalHeight) return reject(new Error('Mascot atlas is empty'));
           resolve({
-            width: image.naturalWidth,
-            height: image.naturalHeight,
+            atlasWidth: image.naturalWidth,
+            atlasHeight: image.naturalHeight,
+            width: mascot.getBoundingClientRect().width,
+            height: mascot.getBoundingClientRect().height,
             bridge: typeof window.chicoApi?.interact === 'function',
           });
         };
-        if (image.complete) check();
-        else image.addEventListener('load', check, { once: true });
+        image.addEventListener('load', check, { once: true });
         image.addEventListener('error', () => {
           clearTimeout(timeout);
-          reject(new Error('Mascot sprite failed to decode'));
+          reject(new Error('Mascot atlas failed to decode'));
         }, { once: true });
+        image.src = background.slice(5, -2);
+        if (image.complete) check();
       })`);
       if (!initialState.bridge) throw new Error('Preload API is unavailable');
 
       win.webContents.send(channels.SET_POSE, 'walk');
       const walkingFrames = await win.webContents.executeJavaScript(`new Promise((resolve) => {
-        const image = document.getElementById('chico');
-        const frames = new Set([image.src]);
-        const interval = setInterval(() => frames.add(image.src), 35);
+        const mascot = document.getElementById('chico');
+        const position = () => {
+          const style = getComputedStyle(mascot);
+          return \`\${style.backgroundPositionX}|\${style.backgroundPositionY}\`;
+        };
+        const frames = new Set([position()]);
+        const interval = setInterval(() => frames.add(position()), 35);
         setTimeout(() => {
           clearInterval(interval);
           resolve([...frames]);
         }, 1200);
       })`);
-      const distinctWalkingFrames = new Set(walkingFrames.filter((src) => src.includes('/caminhada-direita-')));
-      if (distinctWalkingFrames.size < 8) {
-        throw new Error(`Walking animation displayed ${distinctWalkingFrames.size} distinct poses`);
+      if (walkingFrames.length < 8) {
+        throw new Error(`Walking animation displayed ${walkingFrames.length} distinct poses`);
       }
 
-      win.webContents.send(channels.AUTONOMOUS_STATE, { state: 'WALKING', direction: -1 });
+      const measureFrameChanges = (duration) => win.webContents.executeJavaScript(`new Promise((resolve) => {
+        const mascot = document.getElementById('chico');
+        const position = () => {
+          const style = getComputedStyle(mascot);
+          return \`\${style.backgroundPositionX}|\${style.backgroundPositionY}\`;
+        };
+        let previous = position();
+        let changes = 0;
+        const interval = setInterval(() => {
+          const next = position();
+          if (next !== previous) {
+            previous = next;
+            changes += 1;
+          }
+        }, 10);
+        setTimeout(() => {
+          clearInterval(interval);
+          resolve(changes);
+        }, ${duration});
+      })`);
+      win.webContents.send(channels.AUTONOMOUS_STATE, { state: 'WALKING', direction: 1, movementSpeed: 75 });
+      const slowWalkChanges = await measureFrameChanges(1000);
+      win.webContents.send(channels.AUTONOMOUS_STATE, { state: 'WALKING', direction: 1, movementSpeed: 145 });
+      const fastWalkChanges = await measureFrameChanges(1000);
+      if (fastWalkChanges <= slowWalkChanges) {
+        throw new Error(`Walking animation did not speed up with movement (${slowWalkChanges} -> ${fastWalkChanges})`);
+      }
+
+      win.webContents.send(channels.AUTONOMOUS_STATE, { state: 'WALKING', direction: -1, movementSpeed: 105 });
       const leftWalkingFrames = await win.webContents.executeJavaScript(`new Promise((resolve) => {
-        const image = document.getElementById('chico');
+        const mascot = document.getElementById('chico');
+        const position = () => {
+          const style = getComputedStyle(mascot);
+          return \`\${style.backgroundPositionX}|\${style.backgroundPositionY}\`;
+        };
         const frames = new Set();
         const timeout = setTimeout(() => {
           clearInterval(interval);
           resolve([...frames]);
         }, 3000);
         const interval = setInterval(() => {
-          if (image.src.includes('/caminhada-esquerda-')) frames.add(image.src);
+          const frame = position();
+          if (frame.endsWith('|-307.2px')) frames.add(frame);
           if (frames.size === 8) {
             clearTimeout(timeout);
             clearInterval(interval);
@@ -174,21 +218,36 @@ function runSmokeTest() {
           }
         }, 25);
       })`);
-      const distinctLeftWalkingFrames = new Set(leftWalkingFrames.filter((src) => src.includes('/caminhada-esquerda-')));
-      if (distinctLeftWalkingFrames.size < 8) {
-        throw new Error(`Left walking animation displayed ${distinctLeftWalkingFrames.size} poses: ${[...distinctLeftWalkingFrames].join(', ')}`);
+      if (leftWalkingFrames.length < 8) {
+        throw new Error(`Left walking animation displayed ${leftWalkingFrames.length} poses: ${leftWalkingFrames.join(', ')}`);
       }
+
+      const readPosition = `(() => {
+        const style = getComputedStyle(document.getElementById('chico'));
+        return \`\${style.backgroundPositionX}|\${style.backgroundPositionY}\`;
+      })()`;
+      const beforeStep = await win.webContents.executeJavaScript(readPosition);
+      win.webContents.send(channels.SET_POSE, 'walk-step');
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      const afterStep = await win.webContents.executeJavaScript(readPosition);
+      if (beforeStep === afterStep || !afterStep.endsWith('|-307.2px')) {
+        throw new Error('Manual walking frame step did not advance the sprite');
+      }
+      win.webContents.send(channels.SET_POSE, 'walk');
+      await new Promise((resolve) => setTimeout(resolve, 180));
+      const afterResume = await win.webContents.executeJavaScript(readPosition);
+      if (afterResume === afterStep) throw new Error('Automatic walking did not resume after frame stepping');
 
       await win.webContents.executeJavaScript('window.chicoApi.interact()');
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const currentSprite = await win.webContents.executeJavaScript(
-        'document.getElementById("chico").src',
-      );
-      if (!currentSprite.includes('/feliz.png')) {
-        throw new Error(`Interaction did not select the happy sprite: ${currentSprite}`);
+      const currentPosition = await win.webContents.executeJavaScript(readPosition);
+      if (currentPosition !== '0px|-153.6px') {
+        throw new Error(`Interaction did not select the happy frame: ${currentPosition}`);
       }
 
-      console.log(`Electron smoke test passed (${initialState.width}x${initialState.height} sprite, ${distinctWalkingFrames.size} right and ${distinctLeftWalkingFrames.size} left walking poses, IPC interaction).`);
+      console.log(`Electron smoke test passed (${initialState.width}x${initialState.height} sprite, `
+        + `${initialState.atlasWidth}x${initialState.atlasHeight} atlas, ${walkingFrames.length} right and `
+        + `${leftWalkingFrames.length} left walking poses, IPC interaction).`);
       app.exit(0);
     } catch (error) {
       fail(error);

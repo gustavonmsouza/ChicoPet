@@ -27,30 +27,37 @@ npm run test:smoke # inicia o app e valida renderer/IPC no macOS
 
 ## Estrutura
 ```
-assets/sprites/chico*.png  folhas-fonte originais, preservadas sem alteração
-assets/sprites/normalized/ quadros usados pelo app: RGBA, canvas e paleta comuns
-assets/icons/     ícones da barra de menus
-src/main/         processo principal: janela, tray, IPC
-src/preload/      ponte segura entre a página e o processo principal
-src/renderer/     página: HTML, CSS, sprites, estados, personalidade
-tests/            testes unitários
-tools/            gerador determinístico dos sprites finais (Python padrão, sem dependências)
+assets/sprites/source/     folhas-fonte originais e folha de referência, preservadas
+assets/sprites/normalized/ quadros RGBA gerados para montar a atlas
+assets/sprites/chico-spritesheet.png atlas RGBA única usada pelo renderer
+assets/icons/              ícones do app e da barra de menus
+src/main/appPaths.js        caminhos de assets e código usados pelo processo principal
+src/main/                   processo principal: janela, tray, IPC
+src/preload/                ponte segura entre a página e o processo principal
+src/renderer/               página e módulos de animação, interação e fala
+tests/                      testes unitários
+tools/                      geradores determinísticos de sprites (Python padrão, sem dependências)
 ```
 Os caminhos e módulos de código seguem os nomes convencionais em inglês; os arquivos de imagem usam nomes em
 português, como `caminhada-direita-01.png` e `queda-esquerda-01.png`.
 
 ## Como substituir os sprites
-As folhas-fonte ficam em `assets/sprites/chico1.png`, `chico2.png`, `chico3.png` e
-`assets/sprites/chico-andando.png`. Esta última contém oito poses de caminhada para cada direção. Para reconstruir
-os arquivos de runtime, execute:
+As folhas-fonte originais, incluindo as antigas, ficam preservadas em `assets/sprites/source/`. A folha
+`reference.png` contém oito poses de caminhada e oito de corrida para a direita, além de poses de repouso,
+sentado e dormindo. A caminhada antiga deixou de ser fonte do catálogo; a corrida também passou a usar a sequência
+própria da folha de referência. Para reconstruir os arquivos de runtime, execute:
 
 ```bash
 python3 tools/build_normalized_sprites.py
+python3 tools/build_sprite_atlas.py
 ```
 
-O gerador conserva as fontes, remove os fundos, alinha os pés ao chão quando a pose está em pé e escreve frames
-RGBA em um canvas fixo de 640×512. Ele também usa uma paleta compartilhada para que caminhada, queda e repouso
-tenham as mesmas cores. O tamanho na tela é controlado por `SPRITE_SCALE` em `src/renderer/scripts/config.js`.
+O gerador conserva as fontes, remove o fundo verde da nova folha por chroma key com descontaminação das bordas,
+remove os fundos das folhas antigas, alinha os pés ao chão e escreve frames RGBA em um canvas fixo de 640×512.
+Ele também usa uma paleta compartilhada para caminhada, corrida, queda e repouso. O tamanho na tela é controlado
+por `SPRITE_SCALE` em `src/renderer/scripts/config.js`.
+O segundo comando empacota esses quadros em uma atlas de células 640×512; `sprites.js` e `animations.js` identificam
+cada frame por coluna e linha, e o renderer altera `background-position` sem trocar a imagem.
 As preferências ficam em `preferences.json` dentro do diretório de dados do Electron. O gerador deve ser
 reexecutado sempre que seus parâmetros ou as folhas-fonte mudarem.
 
@@ -71,8 +78,8 @@ O comando de distribuição também recria o ícone `.icns` do app a partir do s
 IPC validado (origem e tipo), navegação e janelas novas bloqueadas.
 
 ## Limitações conhecidas
-- O smoke test confirma carregamento e IPC no macOS, mas não substitui a validação manual do clique-through,
-  tray, múltiplos monitores e Spaces em máquinas reais.
+- O smoke test confirma as sequências de caminhada, o ajuste de cadência, o avanço manual de quadros e o IPC no macOS;
+    ele não substitui a validação manual do clique-through, tray, múltiplos monitores e Spaces em máquinas reais.
 - Pode não aparecer sobre apps em tela cheia do macOS.
 - A área de clique do Chico é o retângulo da imagem (não o contorno exato).
 - Mensagens ainda são locais; sem IA.
@@ -91,9 +98,16 @@ As poses utilizadas pelo app são geradas em `assets/sprites/normalized/`. Cada 
 as patas e limpa a borda neutra deixada pelas folhas-fonte. Isso impede flashes de tamanho, manchas de fundo e trocas
 de tom quando uma animação avança.
 
-O catálogo usa oito poses de caminhada por direção, cinco de corrida, cinco de queda, aterrissagem, recuperação e poses de
-repouso. Caminhada e corrida usam velocidades diferentes. As sequências esquerda e direita são arquivos físicos distintos, gerados por espelhamento controlado da
-mesma pose fonte; o renderer não aplica uma inversão CSS global.
+O catálogo usa oito poses de caminhada e oito de corrida por direção, cinco de queda, aterrissagem, recuperação,
+seis poses de repouso, quatro sentado e três dormindo. Caminhada e corrida usam velocidades diferentes. A folha nova
+fornece as sequências para a direita; as sequências à esquerda são geradas por espelhamento controlado, e o renderer
+não aplica uma inversão CSS global. Felicidade e queda continuam usando os sprites existentes. A folha não contém
+quadros de comer nem uma transição dedicada deitar-se; essas animações não estão implementadas.
+
+O ciclo de caminhada usa o padrão lateral-sequencial como referência (pata traseira esquerda, dianteira esquerda,
+traseira direita e dianteira direita), escolhido para esta animação, não como regra universal. A folha fornecida nomeia
+as fases visuais como contato, apoio, passagem, impulso e balanço. O controlador ajusta a cadência dos quadros à
+velocidade de movimento; no menu `Poses (teste)`, `Andando: próximo quadro` pausa o ciclo para inspeção manual.
 
 Ainda não há interface de conversa nem ação de clique duplo implementada. A janela transparente não tem teste visual
 automatizado; a CI valida o carregamento do renderer e a interação IPC no macOS.
@@ -105,5 +119,5 @@ usam as poses reais recortadas da folha enviada, incluindo queda de patas para c
 à posição sentada.
 O controlador mantém a direção da última caminhada, atualiza-a pelos movimentos horizontais do arraste e escolhe a
 variante correspondente. Assim, ao soltar o Chico depois de movê-lo para a direita, ele usa a sequência de queda à
-direita; para a esquerda, usa a sequência esquerda. Os testes validam a existência desses arquivos separados, o canvas
+direita; para a esquerda, usa a sequência esquerda. Os testes validam a atlas e seu gerador, o canvas
 comum, o canal alfa, a paleta compartilhada e a ausência de pixels claros de fundo.

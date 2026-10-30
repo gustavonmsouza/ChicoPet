@@ -27,7 +27,7 @@ html, body {
   bottom: 0;
   translate: -50% 0;
   cursor: grab;
-  -webkit-user-drag: none;
+  background-repeat: no-repeat;
   image-rendering: pixelated;
 }
 .chico.dragging { cursor: grabbing; }

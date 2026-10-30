@@ -1,4 +1,5 @@
-// Single timer owner for sprite sequences. A one-frame pose is displayed statically.
+// Single timer owner; onFrame receives the current animation's frame descriptor.
+// A one-frame pose is displayed statically.
 export class AnimationPlayer {
   constructor({ onFrame = () => {}, setTimeoutFn = setTimeout, clearTimeoutFn = clearTimeout } = {}) {
     this.onFrame = onFrame;
@@ -18,6 +19,24 @@ export class AnimationPlayer {
     this.frameIndex = 0;
     this.onFrame(animation.frames[0]);
     if (!this.paused && animation.frames.length > 1) this.schedule();
+    return true;
+  }
+
+  setFps(fps) {
+    if (!this.animation || !Number.isFinite(fps) || fps <= 0 || fps === this.animation.fps) return false;
+    if (this.timer !== null) this.clearTimeoutFn.call(globalThis, this.timer);
+    this.timer = null;
+    this.animation = Object.freeze({ ...this.animation, fps });
+    this.schedule();
+    return true;
+  }
+
+  step(amount = 1) {
+    const animation = this.animation;
+    if (!animation || !Number.isInteger(amount) || animation.frames.length === 0) return false;
+    this.frameIndex = (this.frameIndex + amount % animation.frames.length + animation.frames.length)
+      % animation.frames.length;
+    this.onFrame(animation.frames[this.frameIndex]);
     return true;
   }
 
