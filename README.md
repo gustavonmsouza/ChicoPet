@@ -72,6 +72,8 @@ uma release no GitHub. Sem os secrets de certificado/notarização configurados,
 configure `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PASSWORD`, `APPLE_ID`,
 `APPLE_APP_SPECIFIC_PASSWORD` e `APPLE_TEAM_ID` no repositório para assinatura e notarização.
 O comando de distribuição também recria o ícone `.icns` do app a partir do sprite normalizado.
+Os pacotes finais incluem somente os ícones e a atlas usados em runtime; as fontes gráficas e os quadros
+intermediários continuam no projeto para edição e geração, mas não são copiados para o app distribuído.
 
 ## Segurança
 `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, CSP restritiva, preload com 5 funções,

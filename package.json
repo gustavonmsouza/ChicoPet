@@ -29,7 +29,9 @@
     "asar": true,
     "files": [
       "src/**/*",
-      "assets/**/*",
+      "assets/icons/chico.icns",
+      "assets/icons/tray.png",
+      "assets/sprites/chico-spritesheet.png",
       "package.json"
     ],
     "mac": {
