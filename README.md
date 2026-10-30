@@ -27,7 +27,7 @@ npm run test:smoke # inicia o app e valida renderer/IPC no macOS
 
 ## Estrutura
 ```
-assets/sprites/source/     folhas-fonte originais e folha de referência, preservadas
+assets/sprites/source/     fontes necessárias para gerar os sprites atuais
 assets/sprites/normalized/ quadros RGBA gerados para montar a atlas
 assets/sprites/chico-spritesheet.png atlas RGBA única usada pelo renderer
 assets/icons/              ícones do app e da barra de menus
@@ -42,10 +42,10 @@ Os caminhos e módulos de código seguem os nomes convencionais em inglês; os a
 português, como `caminhada-direita-01.png` e `queda-esquerda-01.png`.
 
 ## Como substituir os sprites
-As folhas-fonte originais, incluindo as antigas, ficam preservadas em `assets/sprites/source/`. A folha
-`reference.png` contém oito poses de caminhada e oito de corrida para a direita, além de poses de repouso,
-sentado e dormindo. A caminhada antiga deixou de ser fonte do catálogo; a corrida também passou a usar a sequência
-própria da folha de referência. Para reconstruir os arquivos de runtime, execute:
+As fontes necessárias ficam em `assets/sprites/source/`: `chico1.png` e `chico3.png` fornecem poses usadas
+em repouso, felicidade e queda; `reference.png` contém oito poses de caminhada e oito de corrida para a direita,
+além de poses de repouso, sentado e dormindo. As folhas antigas que não participam da geração foram removidas.
+Para reconstruir os arquivos de runtime, execute:
 
 ```bash
 python3 tools/build_normalized_sprites.py
@@ -73,7 +73,8 @@ configure `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PASSWORD`, `APPLE_ID`,
 `APPLE_APP_SPECIFIC_PASSWORD` e `APPLE_TEAM_ID` no repositório para assinatura e notarização.
 O comando de distribuição também recria o ícone `.icns` do app a partir do sprite normalizado.
 Os pacotes finais incluem somente os ícones e a atlas usados em runtime; as fontes gráficas e os quadros
-intermediários continuam no projeto para edição e geração, mas não são copiados para o app distribuído.
+intermediários continuam no projeto para geração, mas não são copiados para o app distribuído. Instaladores
+gerados são artefatos locais em `dist/` e podem ser recriados com `npm run dist:mac`.
 
 ## Segurança
 `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, CSP restritiva, preload com 5 funções,
